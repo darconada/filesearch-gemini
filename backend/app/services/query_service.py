@@ -32,13 +32,10 @@ class QueryService:
             if query.metadata_filter:
                 file_search_tool.file_search.metadata_filter = query.metadata_filter
 
-            # Configurar GenerateContentConfig con tipos correctos
+            # Configurar GenerateContentConfig - primero solo con tools
+            # Los parámetros de generación pueden no ser soportados en esta versión
             config = types.GenerateContentConfig(
-                tools=[file_search_tool],
-                temperature=0.7,
-                top_p=0.95,
-                top_k=40,
-                max_output_tokens=2048
+                tools=[file_search_tool]
             )
 
             # Ejecutar generateContent con el nuevo SDK
