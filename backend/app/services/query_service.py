@@ -17,38 +17,35 @@ class QueryService:
     def execute_query(self, query: QueryRequest) -> QueryResponse:
         """Ejecutar una consulta RAG usando File Search"""
         try:
+            from google.genai import types
+
             client = self.google_client.get_client()
 
-            # Preparar configuración de file_search
-            file_search_config = {
-                "file_search_store_names": query.store_ids
-            }
+            # Preparar FileSearch tool según documentación oficial
+            file_search_tool = types.Tool(
+                file_search=types.FileSearch(
+                    file_search_store_names=query.store_ids
+                )
+            )
 
             # Añadir filtro de metadata si se proporciona
             if query.metadata_filter:
-                file_search_config["metadata_filter"] = query.metadata_filter
+                file_search_tool.file_search.metadata_filter = query.metadata_filter
 
-            # Configurar tools con file_search
-            tools = [{
-                "file_search": file_search_config
-            }]
-
-            # Configuración de generación
-            generation_config = {
-                "temperature": 0.7,
-                "top_p": 0.95,
-                "top_k": 40,
-                "max_output_tokens": 2048,
-            }
+            # Configurar GenerateContentConfig con tipos correctos
+            config = types.GenerateContentConfig(
+                tools=[file_search_tool],
+                temperature=0.7,
+                top_p=0.95,
+                top_k=40,
+                max_output_tokens=2048
+            )
 
             # Ejecutar generateContent con el nuevo SDK
             response = client.models.generate_content(
                 model=settings.model_name,
                 contents=query.question,
-                config={
-                    "tools": tools,
-                    "generation_config": generation_config
-                }
+                config=config
             )
 
             # Extraer la respuesta
