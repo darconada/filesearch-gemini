@@ -60,6 +60,27 @@ export const storesApi = {
   },
 };
 
+// Helper function to extract store ID from full store name
+const extractStoreId = (fullStoreId: string): string => {
+  // fullStoreId format: "fileSearchStores/store-id"
+  // We need just "store-id"
+  if (fullStoreId.startsWith('fileSearchStores/')) {
+    return fullStoreId.substring('fileSearchStores/'.length);
+  }
+  return fullStoreId;
+};
+
+// Helper function to extract document ID from full document name
+const extractDocumentId = (fullDocumentId: string): string => {
+  // fullDocumentId format: "fileSearchStores/store-id/documents/doc-id"
+  // We need just "doc-id"
+  const parts = fullDocumentId.split('/documents/');
+  if (parts.length === 2) {
+    return parts[1];
+  }
+  return fullDocumentId;
+};
+
 // Documents API
 export const documentsApi = {
   list: async (
@@ -69,7 +90,9 @@ export const documentsApi = {
   ): Promise<{ documents: Document[]; next_page_token?: string }> => {
     const params: any = { page_size: pageSize };
     if (pageToken) params.page_token = pageToken;
-    const response = await api.get(`/stores/${encodeURIComponent(storeId)}/documents`, { params });
+    // Extract just the store ID part
+    const shortStoreId = extractStoreId(storeId);
+    const response = await api.get(`/stores/fileSearchStores/${encodeURIComponent(shortStoreId)}/documents`, { params });
     return response.data;
   },
 
@@ -91,7 +114,9 @@ export const documentsApi = {
       formData.append('max_overlap_tokens', chunkingConfig.max_overlap_tokens.toString());
     }
 
-    const response = await api.post(`/stores/${encodeURIComponent(storeId)}/documents`, formData, {
+    // Extract just the store ID part
+    const shortStoreId = extractStoreId(storeId);
+    const response = await api.post(`/stores/fileSearchStores/${encodeURIComponent(shortStoreId)}/documents`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
     return response.data;
@@ -109,14 +134,20 @@ export const documentsApi = {
     if (displayName) formData.append('display_name', displayName);
     if (metadata) formData.append('metadata', JSON.stringify(metadata));
 
-    const response = await api.put(`/stores/${encodeURIComponent(storeId)}/documents/${encodeURIComponent(documentId)}`, formData, {
+    // Extract just the store ID and document ID parts
+    const shortStoreId = extractStoreId(storeId);
+    const shortDocId = extractDocumentId(documentId);
+    const response = await api.put(`/stores/fileSearchStores/${encodeURIComponent(shortStoreId)}/documents/${encodeURIComponent(shortDocId)}`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
     return response.data;
   },
 
   delete: async (storeId: string, documentId: string) => {
-    const response = await api.delete(`/stores/${encodeURIComponent(storeId)}/documents/${encodeURIComponent(documentId)}`);
+    // Extract just the store ID and document ID parts
+    const shortStoreId = extractStoreId(storeId);
+    const shortDocId = extractDocumentId(documentId);
+    const response = await api.delete(`/stores/fileSearchStores/${encodeURIComponent(shortStoreId)}/documents/${encodeURIComponent(shortDocId)}`);
     return response.data;
   },
 };

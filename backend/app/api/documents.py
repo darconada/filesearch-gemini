@@ -8,11 +8,11 @@ import json
 
 logger = logging.getLogger(__name__)
 
-# No usar prefix con :path porque es greedy y causa problemas de routing
+# Usar rutas específicas sin :path después de literal
 router = APIRouter(tags=["documents"])
 
 
-@router.post("/stores/{store_id:path}/documents", response_model=DocumentResponse, status_code=201)
+@router.post("/stores/fileSearchStores/{store_id}/documents", response_model=DocumentResponse, status_code=201)
 async def upload_document(
     store_id: str,
     file: UploadFile = File(...),
@@ -23,7 +23,9 @@ async def upload_document(
 ) -> DocumentResponse:
     """Subir un documento al store"""
     try:
-        logger.info(f"upload_document: store_id='{store_id}'")
+        # Construir store_id completo
+        full_store_id = f"fileSearchStores/{store_id}"
+        logger.info(f"upload_document: store_id='{full_store_id}'")
 
         # Parsear metadata si se proporciona
         metadata_dict: Dict[str, Any] = {}
@@ -43,7 +45,7 @@ async def upload_document(
 
         # Subir documento
         return document_service.upload_document(
-            store_id=store_id,
+            store_id=full_store_id,
             file_content=file.file,
             filename=file.filename or "untitled",
             display_name=display_name,
@@ -58,7 +60,7 @@ async def upload_document(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/stores/{store_id:path}/documents", response_model=DocumentList)
+@router.get("/stores/fileSearchStores/{store_id}/documents", response_model=DocumentList)
 async def list_documents(
     store_id: str,
     page_size: int = Query(20, ge=1, le=20),
@@ -66,10 +68,12 @@ async def list_documents(
 ) -> DocumentList:
     """Listar documentos en un store"""
     try:
-        logger.info(f"list_documents: store_id='{store_id}', page_size={page_size}")
+        # Construir store_id completo
+        full_store_id = f"fileSearchStores/{store_id}"
+        logger.info(f"list_documents: store_id='{full_store_id}', page_size={page_size}")
 
         return document_service.list_documents(
-            store_id=store_id,
+            store_id=full_store_id,
             page_size=page_size,
             page_token=page_token
         )
@@ -78,29 +82,35 @@ async def list_documents(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.delete("/stores/{store_id:path}/documents/{document_id:path}")
-async def delete_document(store_id: str, document_id: str) -> dict:
+@router.delete("/stores/fileSearchStores/{store_id}/documents/{doc_id}")
+async def delete_document(store_id: str, doc_id: str) -> dict:
     """Eliminar un documento"""
     try:
-        logger.info(f"delete_document: store_id='{store_id}', document_id='{document_id}'")
+        # Construir IDs completos
+        full_store_id = f"fileSearchStores/{store_id}"
+        full_document_id = f"fileSearchStores/{store_id}/documents/{doc_id}"
+        logger.info(f"delete_document: store_id='{full_store_id}', document_id='{full_document_id}'")
 
-        return document_service.delete_document(store_id, document_id)
+        return document_service.delete_document(full_store_id, full_document_id)
     except Exception as e:
         logger.error(f"Error in delete_document endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.put("/stores/{store_id:path}/documents/{document_id:path}", response_model=DocumentResponse)
+@router.put("/stores/fileSearchStores/{store_id}/documents/{doc_id}", response_model=DocumentResponse)
 async def update_document(
     store_id: str,
-    document_id: str,
+    doc_id: str,
     file: UploadFile = File(...),
     display_name: Optional[str] = Form(None),
     metadata: Optional[str] = Form(None)  # JSON string
 ) -> DocumentResponse:
     """Actualizar un documento (eliminar y recrear)"""
     try:
-        logger.info(f"update_document: store_id='{store_id}', document_id='{document_id}'")
+        # Construir IDs completos
+        full_store_id = f"fileSearchStores/{store_id}"
+        full_document_id = f"fileSearchStores/{store_id}/documents/{doc_id}"
+        logger.info(f"update_document: store_id='{full_store_id}', document_id='{full_document_id}'")
 
         # Parsear metadata
         metadata_dict: Dict[str, Any] = {}
@@ -112,8 +122,8 @@ async def update_document(
 
         # Actualizar documento
         return document_service.update_document(
-            store_id=store_id,
-            document_id=document_id,
+            store_id=full_store_id,
+            document_id=full_document_id,
             file_content=file.file,
             filename=file.filename or "untitled",
             display_name=display_name,
