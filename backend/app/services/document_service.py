@@ -96,11 +96,10 @@ class DocumentService:
                 # Después del upload, el documento está indexado en el store
                 # El File temporal se elimina automáticamente después de 48h
                 # Necesitamos listar documentos para obtener información del recién subido
-                config_dict = {
-                    "storeName": store_id,
-                    "pageSize": 20
-                }
-                pager = client.file_search_stores.list_documents(config=config_dict)
+                pager = client.file_search_stores.list_documents(
+                    parent=store_id,
+                    page_size=20
+                )
 
                 # Buscar el documento recién subido (el más reciente)
                 file_obj = None
@@ -154,16 +153,13 @@ class DocumentService:
         try:
             client = self.google_client.get_client()
 
-            # Sintaxis correcta: camelCase dentro de config dict
-            config_dict = {
-                "storeName": store_id,
-                "pageSize": page_size
-            }
-            if page_token:
-                config_dict["pageToken"] = page_token
-
-            # list_documents retorna un pager
-            pager = client.file_search_stores.list_documents(config=config_dict)
+            # list_documents usa parent como parámetro directo, no config
+            # parent debe ser el store_id completo (fileSearchStores/xxx)
+            pager = client.file_search_stores.list_documents(
+                parent=store_id,
+                page_size=page_size,
+                page_token=page_token
+            )
 
             documents = []
             next_token = None
