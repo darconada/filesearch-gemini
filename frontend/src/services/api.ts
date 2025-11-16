@@ -50,12 +50,12 @@ export const storesApi = {
   },
 
   get: async (storeId: string): Promise<Store> => {
-    const response = await api.get(`/stores/${storeId}`);
+    const response = await api.get(`/stores/${encodeURIComponent(storeId)}`);
     return response.data;
   },
 
   delete: async (storeId: string) => {
-    const response = await api.delete(`/stores/${storeId}`);
+    const response = await api.delete(`/stores/${encodeURIComponent(storeId)}`);
     return response.data;
   },
 };
@@ -69,7 +69,7 @@ export const documentsApi = {
   ): Promise<{ documents: Document[]; next_page_token?: string }> => {
     const params: any = { page_size: pageSize };
     if (pageToken) params.page_token = pageToken;
-    const response = await api.get(`/stores/${storeId}/documents`, { params });
+    const response = await api.get(`/stores/${encodeURIComponent(storeId)}/documents`, { params });
     return response.data;
   },
 
@@ -91,7 +91,7 @@ export const documentsApi = {
       formData.append('max_overlap_tokens', chunkingConfig.max_overlap_tokens.toString());
     }
 
-    const response = await api.post(`/stores/${storeId}/documents`, formData, {
+    const response = await api.post(`/stores/${encodeURIComponent(storeId)}/documents`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
     return response.data;
@@ -109,14 +109,14 @@ export const documentsApi = {
     if (displayName) formData.append('display_name', displayName);
     if (metadata) formData.append('metadata', JSON.stringify(metadata));
 
-    const response = await api.put(`/stores/${storeId}/documents/${documentId}`, formData, {
+    const response = await api.put(`/stores/${encodeURIComponent(storeId)}/documents/${encodeURIComponent(documentId)}`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
     return response.data;
   },
 
   delete: async (storeId: string, documentId: string) => {
-    const response = await api.delete(`/stores/${storeId}/documents/${documentId}`);
+    const response = await api.delete(`/stores/${encodeURIComponent(storeId)}/documents/${encodeURIComponent(documentId)}`);
     return response.data;
   },
 };
