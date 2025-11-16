@@ -40,8 +40,9 @@ const StoresPage: React.FC = () => {
       const response = await storesApi.list();
       setStores(response.stores);
 
-      // Set first store as active if none selected
-      if (response.stores.length > 0 && !activeStoreId) {
+      // Set first store as active if none selected AND none in localStorage
+      const savedStoreId = localStorage.getItem('activeStoreId');
+      if (response.stores.length > 0 && !savedStoreId) {
         setActiveStoreId(response.stores[0].name);
         localStorage.setItem('activeStoreId', response.stores[0].name);
       }
@@ -53,12 +54,13 @@ const StoresPage: React.FC = () => {
   };
 
   useEffect(() => {
-    loadStores();
-    // Load active store from localStorage
+    // Load active store from localStorage FIRST
     const savedStoreId = localStorage.getItem('activeStoreId');
     if (savedStoreId) {
       setActiveStoreId(savedStoreId);
     }
+    loadStores();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleCreateStore = async () => {
