@@ -171,12 +171,16 @@ const DocumentsPage: React.FC = () => {
 
   return (
     <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
         <Typography variant="h4">Documents</Typography>
         <Button variant="contained" startIcon={<Add />} onClick={() => setOpenUpload(true)}>
           Upload Document
         </Button>
       </Box>
+
+      <Alert severity="info" sx={{ mb: 3 }}>
+        Active Store: <strong>{activeStoreId}</strong>
+      </Alert>
 
       {error && (
         <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
