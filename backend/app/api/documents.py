@@ -8,7 +8,7 @@ import json
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/stores/{store_id}/documents", tags=["documents"])
+router = APIRouter(prefix="/stores/{store_id:path}/documents", tags=["documents"])
 
 
 @router.post("", response_model=DocumentResponse, status_code=201)

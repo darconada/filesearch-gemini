@@ -33,7 +33,7 @@ async def list_stores(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/{store_id}", response_model=StoreResponse)
+@router.get("/{store_id:path}", response_model=StoreResponse)
 async def get_store(store_id: str) -> StoreResponse:
     """Obtener un store específico"""
     try:
@@ -43,7 +43,7 @@ async def get_store(store_id: str) -> StoreResponse:
         raise HTTPException(status_code=404, detail=str(e))
 
 
-@router.delete("/{store_id}")
+@router.delete("/{store_id:path}")
 async def delete_store(store_id: str) -> dict:
     """Eliminar un store"""
     try:
