@@ -96,9 +96,9 @@ class DocumentService:
                 # Después del upload, el documento está indexado en el store
                 # El File temporal se elimina automáticamente después de 48h
                 # Necesitamos listar documentos para obtener información del recién subido
-                pager = client.file_search_stores.list_documents(
+                pager = client.file_search_stores.documents.list(
                     parent=store_id,
-                    page_size=20
+                    config={"pageSize": 20}
                 )
 
                 # Buscar el documento recién subido (el más reciente)
@@ -153,12 +153,14 @@ class DocumentService:
         try:
             client = self.google_client.get_client()
 
-            # list_documents usa parent como parámetro directo, no config
-            # parent debe ser el store_id completo (fileSearchStores/xxx)
-            pager = client.file_search_stores.list_documents(
+            # Sintaxis correcta: client.file_search_stores.documents.list()
+            config_dict = {"pageSize": page_size}
+            if page_token:
+                config_dict["pageToken"] = page_token
+
+            pager = client.file_search_stores.documents.list(
                 parent=store_id,
-                page_size=page_size,
-                page_token=page_token
+                config=config_dict
             )
 
             documents = []
