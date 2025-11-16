@@ -72,19 +72,45 @@ class DocumentService:
                 tmp_file.write(file_content.read())
 
             try:
-                # Preparar metadata
-                custom_metadata = None
+                # Preparar configuración del upload (metadata, display_name, chunking)
+                upload_config = {}
+
+                # Añadir display_name si se proporciona
+                if display_name:
+                    upload_config["displayName"] = display_name
+
+                # Añadir metadata si se proporciona
                 if metadata:
                     custom_metadata = self._convert_metadata_to_google_format(metadata)
+                    upload_config["customMetadata"] = custom_metadata
+                    logger.info(f"Uploading with metadata: {metadata}")
+
+                # Añadir chunking config si se proporciona
+                if chunking_config:
+                    chunking_dict = {}
+                    if chunking_config.max_tokens_per_chunk:
+                        chunking_dict["maxTokensPerChunk"] = chunking_config.max_tokens_per_chunk
+                    if chunking_config.max_overlap_tokens:
+                        chunking_dict["maxOverlapTokens"] = chunking_config.max_overlap_tokens
+                    upload_config["chunkingConfig"] = chunking_dict
 
                 # Subir usando sintaxis de GitHub issue #1638
                 # https://github.com/googleapis/python-genai/issues/1638
                 logger.info(f"Starting upload of {filename} to store {store_id}")
 
-                operation = client.file_search_stores.upload_to_file_search_store(
-                    file=tmp_path,
-                    file_search_store_name=store_id
-                )
+                # Pasar config si hay parámetros adicionales
+                if upload_config:
+                    logger.info(f"Upload config: {upload_config}")
+                    operation = client.file_search_stores.upload_to_file_search_store(
+                        file=tmp_path,
+                        file_search_store_name=store_id,
+                        config=upload_config
+                    )
+                else:
+                    operation = client.file_search_stores.upload_to_file_search_store(
+                        file=tmp_path,
+                        file_search_store_name=store_id
+                    )
 
                 # Esperar a que se complete la operación (es asíncrona)
                 import time
