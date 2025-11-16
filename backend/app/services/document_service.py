@@ -71,6 +71,8 @@ class DocumentService:
 
                 # Subir usando sintaxis de GitHub issue #1638
                 # https://github.com/googleapis/python-genai/issues/1638
+                logger.info(f"Starting upload of {filename} to store {store_id}")
+
                 operation = client.file_search_stores.upload_to_file_search_store(
                     file=tmp_path,
                     file_search_store_name=store_id
@@ -78,20 +80,49 @@ class DocumentService:
 
                 # Esperar a que se complete la operación (es asíncrona)
                 import time
-                max_wait = 60  # Máximo 60 segundos
+                max_wait = 120  # Máximo 2 minutos
                 waited = 0
                 while not operation.done and waited < max_wait:
-                    time.sleep(2)
-                    waited += 2
+                    time.sleep(3)
+                    waited += 3
                     operation = client.operations.get(operation)
+                    logger.info(f"Upload operation status: done={operation.done}, waited={waited}s")
 
                 if not operation.done:
                     raise TimeoutError(f"Upload operation timed out after {max_wait} seconds")
 
-                # Obtener el resultado - el objeto file está en operation.result
-                file_obj = operation.result
+                logger.info(f"Upload operation completed. Fetching document from store...")
 
-                logger.info(f"Document uploaded: {file_obj.name}")
+                # Después del upload, el documento está indexado en el store
+                # El File temporal se elimina automáticamente después de 48h
+                # Necesitamos listar documentos para obtener información del recién subido
+                config_dict = {
+                    "storeName": store_id,
+                    "pageSize": 20
+                }
+                pager = client.file_search_stores.list_documents(config=config_dict)
+
+                # Buscar el documento recién subido (el más reciente)
+                file_obj = None
+                for doc in pager.page:
+                    # El documento más reciente debería ser el nuestro
+                    if not file_obj:
+                        file_obj = doc
+                    elif hasattr(doc, 'create_time') and hasattr(file_obj, 'create_time'):
+                        if doc.create_time > file_obj.create_time:
+                            file_obj = doc
+
+                if not file_obj:
+                    # Si no encontramos ningún documento, crear respuesta básica
+                    logger.warning("Could not find uploaded document in list, creating basic response")
+                    return DocumentResponse(
+                        name=f"{store_id}/documents/unknown",
+                        display_name=display_name or filename,
+                        custom_metadata=metadata or {},
+                        state="PENDING"
+                    )
+
+                logger.info(f"Document uploaded successfully: {file_obj.name}")
 
                 # Convertir respuesta
                 return DocumentResponse(
