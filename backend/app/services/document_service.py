@@ -207,10 +207,10 @@ class DocumentService:
         try:
             client = self.google_client.get_client()
 
-            client.file_search_stores.delete_document(
-                store_name=store_id,
-                document_name=document_id,
-                force=True
+            # Sintaxis correcta: client.file_search_stores.documents.delete()
+            # Igual que list(), delete() está bajo .documents
+            client.file_search_stores.documents.delete(
+                name=document_id  # El ID completo ya incluye el store
             )
 
             logger.info(f"Document deleted: {document_id}")
