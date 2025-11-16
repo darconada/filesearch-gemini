@@ -69,26 +69,26 @@ class DocumentService:
                 if metadata:
                     custom_metadata = self._convert_metadata_to_google_format(metadata)
 
-                # Preparar configuración de upload
+                # Preparar configuración de upload (camelCase para SDK)
                 upload_config = {
-                    "store_name": store_id,
-                    "display_name": display_name or filename
+                    "storeName": store_id,
+                    "displayName": display_name or filename
                 }
 
                 if custom_metadata:
-                    upload_config["custom_metadata"] = custom_metadata
+                    upload_config["customMetadata"] = custom_metadata
 
                 # Configuración de chunking si se proporciona
                 if chunking_config:
                     if chunking_config.max_tokens_per_chunk:
-                        upload_config["max_chunk_size_tokens"] = chunking_config.max_tokens_per_chunk
+                        upload_config["maxChunkSizeTokens"] = chunking_config.max_tokens_per_chunk
                     if chunking_config.max_overlap_tokens:
-                        upload_config["chunk_overlap_tokens"] = chunking_config.max_overlap_tokens
+                        upload_config["chunkOverlapTokens"] = chunking_config.max_overlap_tokens
 
                 # Subir usando el nuevo SDK
                 file_obj = client.file_search_stores.upload_to_file_search_store(
                     path=tmp_path,
-                    **upload_config
+                    config=upload_config
                 )
 
                 logger.info(f"Document uploaded: {file_obj.name}")
@@ -167,9 +167,11 @@ class DocumentService:
             client = self.google_client.get_client()
 
             client.file_search_stores.delete_document(
-                store_name=store_id,
-                document_name=document_id,
-                force=True
+                config={
+                    "storeName": store_id,
+                    "documentName": document_id,
+                    "force": True
+                }
             )
 
             logger.info(f"Document deleted: {document_id}")
