@@ -33,12 +33,12 @@ Esta aplicación usa el **SDK oficial `google-genai`** (v1.6.1+). El SDK anterio
   - Visualización de metadatos
 
 - **Gestión de Documentos**
-  - Subida de documentos con metadatos personalizados (hasta 20 pares clave/valor)
+  - Subida de documentos al File Search store
   - Listado paginado de documentos
   - Actualización de documentos (eliminar + recrear)
-  - Eliminación de documentos
-  - Configuración avanzada de chunking (tokens por chunk, overlap)
-  - Soporte para metadatos numéricos y de texto
+  - Eliminación de documentos con forzado (force delete para documentos indexados)
+  - Preservación de nombres de archivo originales
+  - ⚠️ **Pendiente**: Subida de metadatos personalizados (funcionalidad en desarrollo)
 
 - **Consultas RAG**
   - Preguntas en lenguaje natural
@@ -230,11 +230,10 @@ kill $BACKEND_PID
 1. Ve a la sección **Documents**
 2. Haz clic en **Upload Document**
 3. Selecciona un archivo
-4. (Opcional) Añade metadatos personalizados:
-   - Clave: `author`, Valor: `Robert Graves`
-   - Clave: `year`, Valor: `2021`
-5. (Opcional) Configura opciones avanzadas de chunking
-6. Haz clic en **Upload**
+4. Haz clic en **Upload**
+5. El documento se indexará automáticamente en el File Search store
+
+**Nota**: La funcionalidad de metadatos personalizados está pendiente de implementación.
 
 ### 4. Realizar Consultas RAG
 
@@ -363,18 +362,32 @@ Los logs aparecen en la consola del servidor backend.
 
 ## 📝 Limitaciones Conocidas
 
-1. **Sincronización con Drive**: Implementada como stub, requiere:
+1. **⚠️ Metadatos en Documentos**: La subida de metadatos personalizados al subir archivos NO está funcional actualmente
+   - **Estado**: Pendiente de implementación
+   - **Problema**: El SDK `google-genai` (v1.50.1) requiere un formato específico de metadatos que aún no está correctamente implementado
+   - **Funcionalidad actual**: Los documentos se suben correctamente pero sin metadatos
+   - **Próximos pasos**: Investigar la sintaxis correcta del SDK para el parámetro `customMetadata` en `upload_to_file_search_store()`
+   - La UI permite introducir metadatos pero estos se ignoran durante la subida (se registra un warning en los logs)
+
+2. **Sincronización con Drive**: Implementada como stub, requiere:
    - Autenticación OAuth 2.0
    - Integración con Google Drive API
    - Scheduler para sincronización automática
 
-2. **Paginación**: Implementada en backend, UI básica en frontend
+3. **Paginación**: Implementada en backend, UI básica en frontend
 
-3. **Persistencia de Drive Links**: En memoria (se pierden al reiniciar el servidor)
+4. **Persistencia de Drive Links**: En memoria (se pierden al reiniciar el servidor)
    - Para producción: usar base de datos (PostgreSQL, MongoDB, etc.)
 
 ## 🚧 Futuras Mejoras
 
+### Prioridad Alta
+- [ ] **Implementar subida de metadatos personalizados en documentos** (funcionalidad crítica pendiente)
+  - Investigar formato correcto para `customMetadata` en el SDK
+  - Implementar conversión de metadatos a formato Google
+  - Probar con metadatos numéricos y de texto
+
+### Otras Mejoras
 - [ ] Implementación completa de sincronización con Google Drive
 - [ ] Base de datos para persistencia de vínculos Drive
 - [ ] Autenticación y autorización de usuarios

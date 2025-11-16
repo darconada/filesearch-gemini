@@ -73,6 +73,30 @@ class DocumentService:
 
             try:
                 # Subir usando upload_to_file_search_store (método simple que funciona)
+                #
+                # ⚠️ LIMITACIÓN CONOCIDA: METADATOS NO FUNCIONALES
+                # ============================================
+                # La subida de metadatos personalizados NO está implementada actualmente.
+                #
+                # PROBLEMA:
+                # - El SDK google-genai (v1.50.1) requiere un formato específico para customMetadata
+                # - Los intentos de pasar metadata han fallado con errores de validación Pydantic
+                # - Formato esperado por el SDK: lista de objetos con estructura específica
+                #
+                # INTENTOS PREVIOS QUE FALLARON:
+                # 1. Pasar config con customMetadata como dict → Error: "Input should be a valid list"
+                # 2. Usar Files API + import_file → Error: "Files.upload() got unexpected keyword argument 'file_path'"
+                #
+                # ESTADO ACTUAL:
+                # - Los documentos se suben correctamente SIN metadatos
+                # - Si se proporcionan metadatos, se registra un warning y se ignoran
+                # - La UI permite introducir metadatos pero no se aplican
+                #
+                # PRÓXIMOS PASOS:
+                # - Investigar la documentación oficial del SDK para customMetadata
+                # - Probar formato de lista correcto para customMetadata
+                # - Implementar conversión de metadata a formato Google compatible
+                #
                 logger.info(f"Starting upload of {filename} to store {store_id}")
                 if metadata:
                     logger.warning(f"Metadata provided but not supported yet: {metadata}")
