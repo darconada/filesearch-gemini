@@ -126,8 +126,8 @@ const DrivePage: React.FC = () => {
       </Typography>
 
       <Alert severity="info" sx={{ mb: 3 }}>
-        This feature is under development. You can configure Drive links, but full synchronization
-        with Google Drive API will be implemented in a future version.
+        Configure Google Drive synchronization to automatically sync files from Drive to File Search stores.
+        Supports manual and automatic sync modes. See DRIVE_SETUP.md for OAuth configuration instructions.
       </Alert>
 
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
