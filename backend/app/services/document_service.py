@@ -72,29 +72,17 @@ class DocumentService:
                 tmp_file.write(file_content.read())
 
             try:
-                # Paso 1: Subir archivo a Files API
-                logger.info(f"Step 1: Uploading file {filename} to Files API")
-                uploaded_file = client.files.upload(file_path=tmp_path)
-                logger.info(f"File uploaded to Files API: {uploaded_file.name}")
-
-                # Paso 2: Preparar metadata en formato oficial (lista de objetos)
-                custom_metadata_list = []
+                # Subir usando upload_to_file_search_store (método simple que funciona)
+                logger.info(f"Starting upload of {filename} to store {store_id}")
                 if metadata:
-                    for key, value in metadata.items():
-                        if isinstance(value, (int, float)):
-                            custom_metadata_list.append({"key": key, "numeric_value": float(value)})
-                        else:
-                            custom_metadata_list.append({"key": key, "string_value": str(value)})
-                    logger.info(f"Metadata prepared: {custom_metadata_list}")
+                    logger.warning(f"Metadata provided but not supported yet: {metadata}")
+                if display_name:
+                    logger.warning(f"Display name provided but not supported yet: {display_name}")
 
-                # Paso 3: Importar a File Search Store con metadata
-                logger.info(f"Step 2: Importing file to File Search Store {store_id}")
-                operation = client.file_search_stores.import_file(
-                    file_search_store_name=store_id,
-                    file_name=uploaded_file.name,
-                    custom_metadata=custom_metadata_list if custom_metadata_list else None
+                operation = client.file_search_stores.upload_to_file_search_store(
+                    file=tmp_path,
+                    file_search_store_name=store_id
                 )
-                logger.info(f"Import operation started")
 
                 # Esperar a que se complete la operación (es asíncrona)
                 import time
