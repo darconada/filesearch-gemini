@@ -33,7 +33,8 @@ import {
 } from '@mui/material';
 import { Add, Delete, Sync } from '@mui/icons-material';
 import { driveApi, storesApi } from '@/services/api';
-import type { DriveLink, Store, SyncMode } from '@/types';
+import type { DriveLink, Store } from '@/types';
+import { SyncMode } from '@/types';
 
 const DrivePage: React.FC = () => {
   const [links, setLinks] = useState<DriveLink[]>([]);
