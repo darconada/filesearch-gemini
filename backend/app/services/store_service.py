@@ -74,18 +74,25 @@ class StoreService:
             raise
 
     def get_store(self, store_id: str) -> StoreResponse:
-        """Obtener un store por ID"""
+        """Obtener un store por ID - Nota: get() puede no estar disponible, usamos list()"""
         try:
             client = self.google_client.get_client()
 
-            store = client.file_search_stores.get(name=store_id)
+            # El SDK puede no tener get(), intentamos listar y buscar
+            pager = client.file_search_stores.list(config={"pageSize": 20})
 
-            return StoreResponse(
-                name=store.name,
-                display_name=store.display_name,
-                create_time=getattr(store, 'create_time', None),
-                update_time=getattr(store, 'update_time', None)
-            )
+            for store in pager.page:
+                if store.name == store_id:
+                    return StoreResponse(
+                        name=store.name,
+                        display_name=store.display_name,
+                        create_time=getattr(store, 'create_time', None),
+                        update_time=getattr(store, 'update_time', None)
+                    )
+
+            # Si no lo encontramos, lanzar 404
+            raise ValueError(f"Store {store_id} not found")
+
         except Exception as e:
             logger.error(f"Error getting store {store_id}: {e}")
             raise

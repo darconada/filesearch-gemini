@@ -69,24 +69,27 @@ class DocumentService:
                 if metadata:
                     custom_metadata = self._convert_metadata_to_google_format(metadata)
 
-                # Subir usando el nuevo SDK (parámetros directos, no config)
-                upload_kwargs = {
-                    "path": tmp_path,
-                    "store_name": store_id,
-                    "display_name": display_name or filename
-                }
+                # Subir usando sintaxis de GitHub issue #1638
+                # https://github.com/googleapis/python-genai/issues/1638
+                operation = client.file_search_stores.upload_to_file_search_store(
+                    file=tmp_path,
+                    file_search_store_name=store_id
+                )
 
-                if custom_metadata:
-                    upload_kwargs["custom_metadata"] = custom_metadata
+                # Esperar a que se complete la operación (es asíncrona)
+                import time
+                max_wait = 60  # Máximo 60 segundos
+                waited = 0
+                while not operation.done and waited < max_wait:
+                    time.sleep(2)
+                    waited += 2
+                    operation = client.operations.get(operation)
 
-                # Configuración de chunking si se proporciona
-                if chunking_config:
-                    if chunking_config.max_tokens_per_chunk:
-                        upload_kwargs["max_chunk_size_tokens"] = chunking_config.max_tokens_per_chunk
-                    if chunking_config.max_overlap_tokens:
-                        upload_kwargs["chunk_overlap_tokens"] = chunking_config.max_overlap_tokens
+                if not operation.done:
+                    raise TimeoutError(f"Upload operation timed out after {max_wait} seconds")
 
-                file_obj = client.file_search_stores.upload_to_file_search_store(**upload_kwargs)
+                # Obtener el resultado - el objeto file está en operation.result
+                file_obj = operation.result
 
                 logger.info(f"Document uploaded: {file_obj.name}")
 
