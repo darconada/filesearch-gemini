@@ -22,6 +22,11 @@ async def upload_document(
 ) -> DocumentResponse:
     """Subir un documento al store"""
     try:
+        # Si store_id termina en /documents, quitarlo (FastAPI bug con :path)
+        if store_id.endswith('/documents'):
+            store_id = store_id[:-len('/documents')]
+            logger.info(f"upload_document: Removed /documents suffix, store_id='{store_id}'")
+
         # Parsear metadata si se proporciona
         metadata_dict: Dict[str, Any] = {}
         if metadata:
@@ -63,6 +68,14 @@ async def list_documents(
 ) -> DocumentList:
     """Listar documentos en un store"""
     try:
+        # Debug: ver qué store_id llega
+        logger.info(f"list_documents called with store_id='{store_id}'")
+
+        # Si store_id termina en /documents, quitarlo (FastAPI bug con :path)
+        if store_id.endswith('/documents'):
+            store_id = store_id[:-len('/documents')]
+            logger.info(f"Removed /documents suffix, new store_id='{store_id}'")
+
         return document_service.list_documents(
             store_id=store_id,
             page_size=page_size,
@@ -77,6 +90,11 @@ async def list_documents(
 async def delete_document(store_id: str, document_id: str) -> dict:
     """Eliminar un documento"""
     try:
+        # Si store_id termina en /documents, quitarlo (FastAPI bug con :path)
+        if store_id.endswith('/documents'):
+            store_id = store_id[:-len('/documents')]
+            logger.info(f"delete_document: Removed /documents suffix, store_id='{store_id}'")
+
         return document_service.delete_document(store_id, document_id)
     except Exception as e:
         logger.error(f"Error in delete_document endpoint: {e}")
