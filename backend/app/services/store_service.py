@@ -25,9 +25,12 @@ class StoreService:
 
             logger.info(f"Store created: {store.name}")
 
+            # El SDK puede devolver display_name con diferentes formatos
+            display_name = getattr(store, 'display_name', None) or getattr(store, 'displayName', None) or store_data.display_name
+
             return StoreResponse(
                 name=store.name,
-                display_name=store.display_name,
+                display_name=display_name,
                 create_time=getattr(store, 'create_time', None),
                 update_time=getattr(store, 'update_time', None)
             )
@@ -54,9 +57,12 @@ class StoreService:
 
             # Procesar stores desde el pager
             for store in pager.page:
+                # El SDK puede devolver display_name con diferentes formatos
+                display_name = getattr(store, 'display_name', None) or getattr(store, 'displayName', None) or 'Unnamed Store'
+
                 stores.append(StoreResponse(
                     name=store.name,
-                    display_name=store.display_name,
+                    display_name=display_name,
                     create_time=getattr(store, 'create_time', None),
                     update_time=getattr(store, 'update_time', None)
                 ))
@@ -83,9 +89,12 @@ class StoreService:
 
             for store in pager.page:
                 if store.name == store_id:
+                    # El SDK puede devolver display_name con diferentes formatos
+                    display_name = getattr(store, 'display_name', None) or getattr(store, 'displayName', None) or 'Unnamed Store'
+
                     return StoreResponse(
                         name=store.name,
-                        display_name=store.display_name,
+                        display_name=display_name,
                         create_time=getattr(store, 'create_time', None),
                         update_time=getattr(store, 'update_time', None)
                     )
