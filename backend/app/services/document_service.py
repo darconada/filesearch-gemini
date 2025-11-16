@@ -58,10 +58,18 @@ class DocumentService:
         try:
             client = self.google_client.get_client()
 
-            # Guardar el archivo temporalmente
-            with tempfile.NamedTemporaryFile(delete=False, suffix=Path(filename).suffix) as tmp_file:
+            # Guardar el archivo temporalmente con el nombre original
+            # Esto es importante porque Google File Search usa el nombre del archivo físico
+            # Añadimos un UUID para evitar colisiones si múltiples usuarios suben archivos con el mismo nombre
+            import os
+            import uuid
+            tmp_dir = tempfile.gettempdir()
+            unique_dir = os.path.join(tmp_dir, f"filesearch_{uuid.uuid4().hex[:8]}")
+            os.makedirs(unique_dir, exist_ok=True)
+            tmp_path = os.path.join(unique_dir, filename)
+
+            with open(tmp_path, 'wb') as tmp_file:
                 tmp_file.write(file_content.read())
-                tmp_path = tmp_file.name
 
             try:
                 # Preparar metadata
@@ -136,8 +144,12 @@ class DocumentService:
                 )
 
             finally:
-                # Limpiar archivo temporal
+                # Limpiar archivo temporal y directorio
                 Path(tmp_path).unlink(missing_ok=True)
+                try:
+                    os.rmdir(unique_dir)
+                except:
+                    pass  # Ignorar si el directorio no está vacío o no existe
 
         except Exception as e:
             logger.error(f"Error uploading document: {e}")
