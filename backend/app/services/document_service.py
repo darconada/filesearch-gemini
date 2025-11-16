@@ -116,7 +116,7 @@ class DocumentService:
     def list_documents(
         self,
         store_id: str,
-        page_size: int = 50,
+        page_size: int = 20,
         page_token: Optional[str] = None
     ) -> DocumentList:
         """Listar documentos en un store"""

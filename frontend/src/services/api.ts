@@ -37,7 +37,7 @@ export const configApi = {
 
 // Stores API
 export const storesApi = {
-  list: async (pageSize = 50, pageToken?: string): Promise<{ stores: Store[]; next_page_token?: string }> => {
+  list: async (pageSize = 20, pageToken?: string): Promise<{ stores: Store[]; next_page_token?: string }> => {
     const params: any = { page_size: pageSize };
     if (pageToken) params.page_token = pageToken;
     const response = await api.get('/stores', { params });
@@ -64,7 +64,7 @@ export const storesApi = {
 export const documentsApi = {
   list: async (
     storeId: string,
-    pageSize = 50,
+    pageSize = 20,
     pageToken?: string
   ): Promise<{ documents: Document[]; next_page_token?: string }> => {
     const params: any = { page_size: pageSize };

@@ -58,7 +58,7 @@ async def upload_document(
 @router.get("", response_model=DocumentList)
 async def list_documents(
     store_id: str,
-    page_size: int = Query(50, ge=1, le=100),
+    page_size: int = Query(20, ge=1, le=20),
     page_token: Optional[str] = Query(None)
 ) -> DocumentList:
     """Listar documentos en un store"""

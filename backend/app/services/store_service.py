@@ -33,7 +33,7 @@ class StoreService:
             logger.error(f"Error creating store: {e}")
             raise
 
-    def list_stores(self, page_size: int = 50, page_token: Optional[str] = None) -> StoreList:
+    def list_stores(self, page_size: int = 20, page_token: Optional[str] = None) -> StoreList:
         """Listar stores disponibles"""
         try:
             client = self.google_client.get_client()

@@ -22,7 +22,7 @@ async def create_store(store_data: StoreCreate) -> StoreResponse:
 
 @router.get("", response_model=StoreList)
 async def list_stores(
-    page_size: int = Query(50, ge=1, le=100),
+    page_size: int = Query(20, ge=1, le=20),
     page_token: Optional[str] = Query(None)
 ) -> StoreList:
     """Listar todos los stores"""
