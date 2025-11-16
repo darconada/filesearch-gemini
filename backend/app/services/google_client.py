@@ -1,5 +1,6 @@
-"""Cliente para Google Generative AI y File Search"""
-import google.generativeai as genai
+"""Cliente para Google Gen AI SDK (nuevo)"""
+from google import genai
+from google.genai import types
 from typing import Optional
 from app.config import settings
 import logging
@@ -8,9 +9,10 @@ logger = logging.getLogger(__name__)
 
 
 class GoogleClient:
-    """Cliente singleton para interactuar con Google Generative AI"""
+    """Cliente singleton para interactuar con Google Gen AI"""
 
     _instance: Optional["GoogleClient"] = None
+    _client: Optional[genai.Client] = None
     _configured: bool = False
 
     def __new__(cls):
@@ -26,9 +28,9 @@ class GoogleClient:
             raise ValueError("API key no configurada")
 
         try:
-            genai.configure(api_key=key)
+            self._client = genai.Client(api_key=key)
             self._configured = True
-            logger.info("Google Generative AI client configured successfully")
+            logger.info("Google Gen AI client configured successfully")
         except Exception as e:
             self._configured = False
             logger.error(f"Error configuring Google client: {e}")
@@ -36,15 +38,13 @@ class GoogleClient:
 
     def is_configured(self) -> bool:
         """Verificar si el cliente está configurado"""
-        return self._configured
+        return self._configured and self._client is not None
 
-    def get_model(self, model_name: Optional[str] = None):
-        """Obtener una instancia del modelo generativo"""
-        if not self._configured:
+    def get_client(self) -> genai.Client:
+        """Obtener el cliente configurado"""
+        if not self._configured or self._client is None:
             self.configure()
-
-        model = model_name or settings.model_name
-        return genai.GenerativeModel(model)
+        return self._client
 
     def test_connection(self) -> tuple[bool, Optional[str]]:
         """Probar la conexión listando stores"""
@@ -53,9 +53,11 @@ class GoogleClient:
                 self.configure()
 
             # Intentar listar stores como prueba
-            stores = genai.list_file_search_stores(page_size=1)
-            # Convertir a lista para forzar la ejecución
-            _ = list(stores)
+            client = self.get_client()
+            response = client.file_search_stores.list(page_size=1)
+
+            # Forzar la ejecución
+            list(response)
 
             return True, None
         except Exception as e:

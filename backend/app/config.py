@@ -15,10 +15,18 @@ class Settings:
     def __init__(self):
         self.env_path = env_path
         self.api_key: Optional[str] = os.getenv("GOOGLE_API_KEY")
-        self.model_name: str = os.getenv("GEMINI_MODEL", "gemini-2.0-flash-exp")
+        self.model_name: str = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
         self.host: str = os.getenv("HOST", "0.0.0.0")
         self.port: int = int(os.getenv("PORT", "8000"))
         self.cors_origins: list[str] = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://localhost:3000").split(",")
+
+        # Google Drive OAuth configuration
+        self.drive_credentials_file: Optional[str] = os.getenv("GOOGLE_DRIVE_CREDENTIALS")
+        self.drive_token_file: str = os.getenv("GOOGLE_DRIVE_TOKEN", str(Path(__file__).parent.parent / "token.json"))
+        self.drive_scopes: list[str] = ["https://www.googleapis.com/auth/drive.readonly"]
+
+        # Database configuration
+        self.database_url: str = os.getenv("DATABASE_URL", f"sqlite:///{Path(__file__).parent.parent / 'app.db'}")
 
     def set_api_key(self, api_key: str) -> None:
         """Guardar API key en el archivo .env"""

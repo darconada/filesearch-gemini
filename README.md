@@ -1,6 +1,22 @@
 # File Search RAG Application
 
-Una aplicación web completa para gestionar Google File Search y ejecutar consultas RAG (Retrieval-Augmented Generation) con una interfaz moderna y una API REST.
+Una aplicación web completa para gestionar Google File Search y ejecutar consultas RAG (Retrieval-Augmented Generation) con una interfaz moderna, API REST y **sincronización completa con Google Drive**.
+
+## ⚠️ IMPORTANTE - Versión 2.0
+
+Esta aplicación usa el **SDK oficial `google-genai`** (v1.6.1+). El SDK anterior `google-generativeai` **NO soporta File Search** y causará errores.
+
+**Si tienes el error**: `module 'google.generativeai' has no attribute 'list_file_search_stores'`
+- ✅ **Solución**: Instala las dependencias correctas: `pip install -r requirements.txt`
+- ✅ El SDK correcto es `google-genai` (no `google-generativeai`)
+
+**Novedades v2.0**:
+- ✨ **Sincronización COMPLETA con Google Drive** (OAuth 2.0 + detección automática de cambios)
+- ✨ Scheduler automático cada 5 minutos para sync mode AUTO
+- ✨ Base de datos SQLite para persistencia de vínculos Drive
+- ✨ Modelo actualizado: `gemini-2.5-flash` (compatible con File Search)
+- 📖 Ver [CHANGELOG.md](CHANGELOG.md) para detalles completos
+- 📖 Ver [DRIVE_SETUP.md](DRIVE_SETUP.md) para configurar Google Drive
 
 ## 📋 Características
 

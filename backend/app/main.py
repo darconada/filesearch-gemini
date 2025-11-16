@@ -1,8 +1,11 @@
 """FastAPI main application"""
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
 from app.config import settings
 from app.api import config, stores, documents, query, drive
+from app.database import init_db
+from app.scheduler import start_scheduler, stop_scheduler
 import logging
 
 # Configurar logging
@@ -13,13 +16,32 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Gestionar inicio y cierre de la aplicación"""
+    # Startup: Inicializar BD y scheduler
+    logger.info("Initializing database...")
+    init_db()
+
+    logger.info("Starting scheduler...")
+    start_scheduler()
+
+    yield
+
+    # Shutdown: Detener scheduler
+    logger.info("Stopping scheduler...")
+    stop_scheduler()
+
+
 # Crear aplicación FastAPI
 app = FastAPI(
     title="File Search RAG API",
-    description="API REST para gestionar Google File Search y consultas RAG",
-    version="1.0.0",
+    description="API REST para gestionar Google File Search y consultas RAG con sincronización Drive",
+    version="2.0.0",
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
+    lifespan=lifespan
 )
 
 # Configurar CORS

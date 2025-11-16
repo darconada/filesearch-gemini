@@ -1,6 +1,5 @@
 """Servicio para gestión de File Search Stores"""
-import google.generativeai as genai
-from typing import Optional, List
+from typing import Optional
 from app.models.store import StoreCreate, StoreResponse, StoreList
 from app.services.google_client import google_client
 import logging
@@ -12,16 +11,15 @@ class StoreService:
     """Servicio para operaciones con stores"""
 
     def __init__(self):
-        self.client = google_client
+        self.google_client = google_client
 
     def create_store(self, store_data: StoreCreate) -> StoreResponse:
         """Crear un nuevo File Search store"""
         try:
-            if not self.client.is_configured():
-                self.client.configure()
+            client = self.google_client.get_client()
 
-            # Crear el store
-            store = genai.create_file_search_store(display_name=store_data.display_name)
+            # Crear el store usando el nuevo SDK
+            store = client.file_search_stores.create(display_name=store_data.display_name)
 
             logger.info(f"Store created: {store.name}")
 
@@ -38,21 +36,20 @@ class StoreService:
     def list_stores(self, page_size: int = 50, page_token: Optional[str] = None) -> StoreList:
         """Listar stores disponibles"""
         try:
-            if not self.client.is_configured():
-                self.client.configure()
+            client = self.google_client.get_client()
 
-            # Listar stores
-            kwargs = {"page_size": page_size}
+            # Listar stores usando el nuevo SDK
+            config = {"page_size": page_size}
             if page_token:
-                kwargs["page_token"] = page_token
+                config["page_token"] = page_token
 
-            stores_page = genai.list_file_search_stores(**kwargs)
+            stores_response = client.file_search_stores.list(**config)
 
             stores = []
             next_token = None
 
             # Procesar stores
-            for store in stores_page:
+            for store in stores_response:
                 stores.append(StoreResponse(
                     name=store.name,
                     display_name=store.display_name,
@@ -61,8 +58,8 @@ class StoreService:
                 ))
 
             # Obtener next_page_token si existe
-            if hasattr(stores_page, 'next_page_token'):
-                next_token = stores_page.next_page_token
+            if hasattr(stores_response, 'next_page_token'):
+                next_token = stores_response.next_page_token
 
             logger.info(f"Listed {len(stores)} stores")
 
@@ -75,10 +72,9 @@ class StoreService:
     def get_store(self, store_id: str) -> StoreResponse:
         """Obtener un store por ID"""
         try:
-            if not self.client.is_configured():
-                self.client.configure()
+            client = self.google_client.get_client()
 
-            store = genai.get_file_search_store(name=store_id)
+            store = client.file_search_stores.get(name=store_id)
 
             return StoreResponse(
                 name=store.name,
@@ -93,11 +89,10 @@ class StoreService:
     def delete_store(self, store_id: str) -> dict:
         """Eliminar un store"""
         try:
-            if not self.client.is_configured():
-                self.client.configure()
+            client = self.google_client.get_client()
 
             # Eliminar con force=True para borrar todos los documentos
-            genai.delete_file_search_store(name=store_id, force=True)
+            client.file_search_stores.delete(name=store_id, force=True)
 
             logger.info(f"Store deleted: {store_id}")
 

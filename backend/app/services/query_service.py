@@ -1,5 +1,4 @@
 """Servicio para consultas RAG con File Search"""
-import google.generativeai as genai
 from typing import Optional, List
 from app.models.query import QueryRequest, QueryResponse, DocumentSource
 from app.services.google_client import google_client
@@ -13,13 +12,12 @@ class QueryService:
     """Servicio para ejecutar consultas RAG"""
 
     def __init__(self):
-        self.client = google_client
+        self.google_client = google_client
 
     def execute_query(self, query: QueryRequest) -> QueryResponse:
         """Ejecutar una consulta RAG usando File Search"""
         try:
-            if not self.client.is_configured():
-                self.client.configure()
+            client = self.google_client.get_client()
 
             # Preparar configuración de file_search
             file_search_config = {
@@ -30,33 +28,31 @@ class QueryService:
             if query.metadata_filter:
                 file_search_config["metadata_filter"] = query.metadata_filter
 
-            # Configurar el modelo con la herramienta file_search
-            model = self.client.get_model()
+            # Configurar tools con file_search
+            tools = [{
+                "file_search": file_search_config
+            }]
 
-            # Crear la configuración de generación
-            generation_config = genai.types.GenerationConfig(
-                temperature=0.7,
-                top_p=0.95,
-                top_k=40,
-                max_output_tokens=2048,
-            )
+            # Configuración de generación
+            generation_config = {
+                "temperature": 0.7,
+                "top_p": 0.95,
+                "top_k": 40,
+                "max_output_tokens": 2048,
+            }
 
-            # Preparar las herramientas
-            tools = [
-                genai.types.Tool(
-                    file_search=file_search_config
-                )
-            ]
-
-            # Generar contenido
-            response = model.generate_content(
-                query.question,
-                tools=tools,
-                generation_config=generation_config
+            # Ejecutar generateContent con el nuevo SDK
+            response = client.models.generate_content(
+                model=settings.model_name,
+                contents=query.question,
+                config={
+                    "tools": tools,
+                    "generation_config": generation_config
+                }
             )
 
             # Extraer la respuesta
-            answer_text = response.text if response.text else "No se pudo generar una respuesta."
+            answer_text = response.text if hasattr(response, 'text') and response.text else "No se pudo generar una respuesta."
 
             # Extraer grounding metadata (fuentes)
             sources = []
@@ -70,7 +66,7 @@ class QueryService:
                     # Procesar chunks de grounding
                     if hasattr(grounding, 'grounding_chunks'):
                         for chunk in grounding.grounding_chunks:
-                            source = DocumentSource()
+                            source = DocumentSource(metadata={})
 
                             # Extraer información del chunk
                             if hasattr(chunk, 'retrieved_context'):
@@ -94,10 +90,10 @@ class QueryService:
 
                             sources.append(source)
 
-                    # Alternativamente, procesar search_entry_point si existe
-                    elif hasattr(grounding, 'search_entry_point'):
-                        # Algunas versiones usan este formato
-                        logger.info("Grounding metadata found in search_entry_point format")
+                    # Alternativamente, procesar search_support si existe
+                    elif hasattr(grounding, 'search_support'):
+                        logger.info("Grounding metadata found in search_support format")
+                        # Procesar formato alternativo si existe
 
             logger.info(f"Query executed successfully, {len(sources)} sources found")
 

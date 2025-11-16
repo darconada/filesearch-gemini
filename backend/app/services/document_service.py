@@ -1,5 +1,4 @@
 """Servicio para gestión de documentos en File Search"""
-import google.generativeai as genai
 from typing import Optional, BinaryIO, Dict, Any
 from app.models.document import DocumentResponse, DocumentList, ChunkingConfig
 from app.services.google_client import google_client
@@ -14,23 +13,17 @@ class DocumentService:
     """Servicio para operaciones con documentos"""
 
     def __init__(self):
-        self.client = google_client
+        self.google_client = google_client
 
-    def _convert_metadata_to_google_format(self, metadata: Dict[str, Any]) -> list:
+    def _convert_metadata_to_google_format(self, metadata: Dict[str, Any]) -> Dict[str, Any]:
         """Convertir metadata de formato simple a formato Google"""
-        google_metadata = []
+        google_metadata = {}
 
         for key, value in metadata.items():
             if isinstance(value, (int, float)):
-                google_metadata.append({
-                    "key": key,
-                    "value": {"numeric_value": float(value)}
-                })
+                google_metadata[key] = {"numeric_value": float(value)}
             else:
-                google_metadata.append({
-                    "key": key,
-                    "value": {"string_value": str(value)}
-                })
+                google_metadata[key] = {"string_value": str(value)}
 
         return google_metadata
 
@@ -41,14 +34,14 @@ class DocumentService:
         if not google_metadata:
             return metadata
 
-        for item in google_metadata:
-            key = item.get("key") or item.get("name")
-            value_obj = item.get("value", {})
-
-            if "numeric_value" in value_obj:
-                metadata[key] = value_obj["numeric_value"]
-            elif "string_value" in value_obj:
-                metadata[key] = value_obj["string_value"]
+        for key, value_obj in google_metadata.items():
+            if isinstance(value_obj, dict):
+                if "numeric_value" in value_obj:
+                    metadata[key] = value_obj["numeric_value"]
+                elif "string_value" in value_obj:
+                    metadata[key] = value_obj["string_value"]
+            else:
+                metadata[key] = value_obj
 
         return metadata
 
@@ -63,8 +56,7 @@ class DocumentService:
     ) -> DocumentResponse:
         """Subir un documento al store"""
         try:
-            if not self.client.is_configured():
-                self.client.configure()
+            client = self.google_client.get_client()
 
             # Guardar el archivo temporalmente
             with tempfile.NamedTemporaryFile(delete=False, suffix=Path(filename).suffix) as tmp_file:
@@ -77,28 +69,27 @@ class DocumentService:
                 if metadata:
                     custom_metadata = self._convert_metadata_to_google_format(metadata)
 
-                # Preparar configuración de chunking
-                chunking_params = {}
-                if chunking_config:
-                    if chunking_config.max_tokens_per_chunk:
-                        chunking_params["max_chunk_size_tokens"] = chunking_config.max_tokens_per_chunk
-                    if chunking_config.max_overlap_tokens:
-                        chunking_params["chunk_overlap_tokens"] = chunking_config.max_overlap_tokens
-
-                # Subir usando el método conveniente
-                upload_params = {
-                    "path": tmp_path,
+                # Preparar configuración de upload
+                upload_config = {
                     "store_name": store_id,
                     "display_name": display_name or filename
                 }
 
                 if custom_metadata:
-                    upload_params["custom_metadata"] = custom_metadata
+                    upload_config["custom_metadata"] = custom_metadata
 
-                if chunking_params:
-                    upload_params.update(chunking_params)
+                # Configuración de chunking si se proporciona
+                if chunking_config:
+                    if chunking_config.max_tokens_per_chunk:
+                        upload_config["max_chunk_size_tokens"] = chunking_config.max_tokens_per_chunk
+                    if chunking_config.max_overlap_tokens:
+                        upload_config["chunk_overlap_tokens"] = chunking_config.max_overlap_tokens
 
-                file_obj = genai.upload_to_file_search_store(**upload_params)
+                # Subir usando el nuevo SDK
+                file_obj = client.file_search_stores.upload_to_file_search_store(
+                    path=tmp_path,
+                    **upload_config
+                )
 
                 logger.info(f"Document uploaded: {file_obj.name}")
 
@@ -107,7 +98,7 @@ class DocumentService:
                     name=file_obj.name,
                     display_name=file_obj.display_name or filename,
                     custom_metadata=self._convert_metadata_from_google_format(
-                        getattr(file_obj, 'custom_metadata', None)
+                        getattr(file_obj, 'custom_metadata', {})
                     ),
                     create_time=getattr(file_obj, 'create_time', None),
                     update_time=getattr(file_obj, 'update_time', None),
@@ -130,35 +121,34 @@ class DocumentService:
     ) -> DocumentList:
         """Listar documentos en un store"""
         try:
-            if not self.client.is_configured():
-                self.client.configure()
+            client = self.google_client.get_client()
 
-            kwargs = {
+            config = {
                 "store_name": store_id,
                 "page_size": page_size
             }
             if page_token:
-                kwargs["page_token"] = page_token
+                config["page_token"] = page_token
 
-            docs_page = genai.list_file_search_store_documents(**kwargs)
+            docs_response = client.file_search_stores.list_documents(**config)
 
             documents = []
             next_token = None
 
-            for doc in docs_page:
+            for doc in docs_response:
                 documents.append(DocumentResponse(
                     name=doc.name,
                     display_name=doc.display_name or "Untitled",
                     custom_metadata=self._convert_metadata_from_google_format(
-                        getattr(doc, 'custom_metadata', None)
+                        getattr(doc, 'custom_metadata', {})
                     ),
                     create_time=getattr(doc, 'create_time', None),
                     update_time=getattr(doc, 'update_time', None),
                     state=getattr(doc, 'state', 'INDEXED')
                 ))
 
-            if hasattr(docs_page, 'next_page_token'):
-                next_token = docs_page.next_page_token
+            if hasattr(docs_response, 'next_page_token'):
+                next_token = docs_response.next_page_token
 
             logger.info(f"Listed {len(documents)} documents from store {store_id}")
 
@@ -171,10 +161,9 @@ class DocumentService:
     def delete_document(self, store_id: str, document_id: str) -> dict:
         """Eliminar un documento"""
         try:
-            if not self.client.is_configured():
-                self.client.configure()
+            client = self.google_client.get_client()
 
-            genai.delete_file_search_store_document(
+            client.file_search_stores.delete_document(
                 store_name=store_id,
                 document_name=document_id,
                 force=True
