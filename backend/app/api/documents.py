@@ -70,15 +70,23 @@ async def list_documents(
     try:
         # Construir store_id completo
         full_store_id = f"fileSearchStores/{store_id}"
-        logger.info(f"list_documents: store_id='{full_store_id}', page_size={page_size}")
+        logger.info(f"========================================")
+        logger.info(f"list_documents ENDPOINT CALLED")
+        logger.info(f"  store_id parameter: '{store_id}'")
+        logger.info(f"  full_store_id: '{full_store_id}'")
+        logger.info(f"  page_size: {page_size}")
+        logger.info(f"========================================")
 
-        return document_service.list_documents(
+        result = document_service.list_documents(
             store_id=full_store_id,
             page_size=page_size,
             page_token=page_token
         )
+
+        logger.info(f"list_documents SUCCESS: {len(result.documents)} documents found")
+        return result
     except Exception as e:
-        logger.error(f"Error in list_documents endpoint: {e}")
+        logger.error(f"Error in list_documents endpoint: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 

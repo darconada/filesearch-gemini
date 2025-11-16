@@ -54,9 +54,12 @@ app.add_middleware(
 )
 
 # Incluir routers
+# IMPORTANTE: documents.router debe ir ANTES que stores.router
+# porque stores tiene /{store_id:path} que es greedy y capturaría
+# las rutas de documents si stores se registra primero
 app.include_router(config.router)
-app.include_router(stores.router)
-app.include_router(documents.router)
+app.include_router(documents.router)  # Primero las rutas más específicas
+app.include_router(stores.router)     # Después las rutas con :path
 app.include_router(query.router)
 app.include_router(drive.router)
 

@@ -37,9 +37,10 @@ async def list_stores(
 async def get_store(store_id: str) -> StoreResponse:
     """Obtener un store específico"""
     try:
+        logger.info(f"get_store ENDPOINT CALLED with store_id: '{store_id}'")
         return store_service.get_store(store_id)
     except Exception as e:
-        logger.error(f"Error in get_store endpoint: {e}")
+        logger.error(f"Error in get_store endpoint with store_id='{store_id}': {e}")
         raise HTTPException(status_code=404, detail=str(e))
 
 
