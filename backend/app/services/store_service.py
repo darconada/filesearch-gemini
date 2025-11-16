@@ -78,7 +78,7 @@ class StoreService:
         try:
             client = self.google_client.get_client()
 
-            store = client.file_search_stores.get(config={"name": store_id})
+            store = client.file_search_stores.get(name=store_id)
 
             return StoreResponse(
                 name=store.name,
@@ -96,9 +96,7 @@ class StoreService:
             client = self.google_client.get_client()
 
             # Eliminar con force=True para borrar todos los documentos
-            client.file_search_stores.delete(
-                config={"name": store_id, "force": True}
-            )
+            client.file_search_stores.delete(name=store_id, force=True)
 
             logger.info(f"Store deleted: {store_id}")
 
