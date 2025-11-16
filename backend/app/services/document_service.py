@@ -123,19 +123,22 @@ class DocumentService:
         try:
             client = self.google_client.get_client()
 
-            config = {
-                "store_name": store_id,
-                "page_size": page_size
+            # Sintaxis correcta: camelCase dentro de config dict
+            config_dict = {
+                "storeName": store_id,
+                "pageSize": page_size
             }
             if page_token:
-                config["page_token"] = page_token
+                config_dict["pageToken"] = page_token
 
-            docs_response = client.file_search_stores.list_documents(**config)
+            # list_documents retorna un pager
+            pager = client.file_search_stores.list_documents(config=config_dict)
 
             documents = []
             next_token = None
 
-            for doc in docs_response:
+            # Iterar sobre el pager
+            for doc in pager.page:
                 documents.append(DocumentResponse(
                     name=doc.name,
                     display_name=doc.display_name or "Untitled",
@@ -147,8 +150,8 @@ class DocumentService:
                     state=getattr(doc, 'state', 'INDEXED')
                 ))
 
-            if hasattr(docs_response, 'next_page_token'):
-                next_token = docs_response.next_page_token
+            if hasattr(pager, 'next_page_token') and pager.next_page_token:
+                next_token = pager.next_page_token
 
             logger.info(f"Listed {len(documents)} documents from store {store_id}")
 

@@ -38,18 +38,20 @@ class StoreService:
         try:
             client = self.google_client.get_client()
 
-            # Listar stores usando el nuevo SDK
-            config = {"page_size": page_size}
+            # Listar stores usando el nuevo SDK (sintaxis correcta)
+            # IMPORTANTE: pageSize en camelCase, dentro de config dict
+            config_dict = {"pageSize": page_size}
             if page_token:
-                config["page_token"] = page_token
+                config_dict["pageToken"] = page_token
 
-            stores_response = client.file_search_stores.list(**config)
+            # El método list() retorna un pager
+            pager = client.file_search_stores.list(config=config_dict)
 
             stores = []
             next_token = None
 
-            # Procesar stores
-            for store in stores_response:
+            # Procesar stores desde el pager
+            for store in pager.page:
                 stores.append(StoreResponse(
                     name=store.name,
                     display_name=store.display_name,
@@ -57,9 +59,9 @@ class StoreService:
                     update_time=getattr(store, 'update_time', None)
                 ))
 
-            # Obtener next_page_token si existe
-            if hasattr(stores_response, 'next_page_token'):
-                next_token = stores_response.next_page_token
+            # Obtener next_page_token si hay más páginas
+            if hasattr(pager, 'next_page_token') and pager.next_page_token:
+                next_token = pager.next_page_token
 
             logger.info(f"Listed {len(stores)} stores")
 

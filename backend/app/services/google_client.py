@@ -52,12 +52,12 @@ class GoogleClient:
             if not self._configured:
                 self.configure()
 
-            # Intentar listar stores como prueba
+            # Intentar listar stores como prueba con sintaxis correcta
             client = self.get_client()
-            response = client.file_search_stores.list(page_size=1)
+            pager = client.file_search_stores.list(config={"pageSize": 1})
 
-            # Forzar la ejecución
-            list(response)
+            # Forzar la ejecución accediendo a la primera página
+            _ = list(pager.page)
 
             return True, None
         except Exception as e:
