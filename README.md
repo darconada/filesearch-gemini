@@ -59,6 +59,26 @@ Esta aplicación usa el **SDK oficial `google-genai`** (v1.6.1+). El SDK anterio
   - Manejo robusto de errores
   - Soporte para multipart/form-data
 
+- **🆕 Integración MCP (Model Context Protocol)**
+  - Servidor MCP completo con 21 herramientas
+  - Compatible con Gemini CLI, Claude Code y Codex CLI
+  - Soporte para stdio y HTTP
+  - Documentación completa de integración
+
+- **🆕 CLI Local (filesearch-gemini)**
+  - Interfaz de línea de comandos completa
+  - Subcomandos para todas las operaciones
+  - Compatible con LLM agents
+  - Salida formateada con Rich
+
+- **🆕 Soporte Multi-Proyecto**
+  - Gestiona múltiples proyectos de Google AI Studio
+  - Cada proyecto con su propia API key
+  - Hasta 10 stores por proyecto
+  - Selector de proyecto en el header
+  - Activación rápida entre proyectos
+  - Ver [MULTI_PROJECT.md](MULTI_PROJECT.md) para más detalles
+
 - **Base para Sincronización con Google Drive**
   - Modelos de datos preparados
   - Endpoints stub implementados
@@ -209,9 +229,103 @@ npm run dev
 kill $BACKEND_PID
 ```
 
+## 🤖 Integración con LLM Agents (MCP y CLI)
+
+Esta aplicación ahora se puede usar desde **agentes LLM** como **Gemini CLI**, **Claude Code** y **Codex CLI** mediante dos métodos:
+
+### Método 1: Servidor MCP (Recomendado)
+
+El servidor MCP expone todas las operaciones de File Search como herramientas que los agentes pueden invocar:
+
+```bash
+# Iniciar el servidor MCP
+cd backend
+python mcp_server.py
+```
+
+**Herramientas MCP disponibles (21 en total)**:
+- Configuración: `set_api_key`, `get_config_status`
+- Stores: `create_store`, `list_stores`, `get_store`, `delete_store`
+- Documentos: `upload_document`, `list_documents`, `update_document`, `delete_document`
+- Consultas RAG: `rag_query`
+- Drive Sync: `create_drive_link`, `list_drive_links`, `sync_drive_link_now`, etc.
+
+### Método 2: CLI Local
+
+También puedes usar el CLI directamente desde tu terminal o desde agentes LLM:
+
+```bash
+# Ver ayuda
+./filesearch-gemini --help
+
+# Ejemplos rápidos
+./filesearch-gemini stores list
+./filesearch-gemini docs upload --store-id xxx --file doc.pdf
+./filesearch-gemini query --question "¿Qué dice sobre X?" --stores xxx
+```
+
+### 🌐 Gestión desde la Interfaz Web
+
+La nueva sección **LLM Integration** en la interfaz web te permite:
+
+- **Configurar el servidor MCP**: URL del backend, habilitar/deshabilitar
+- **Ver ejemplos de configuración** para Gemini CLI, Claude Code y Codex con botones copiar/pegar
+- **Configurar el CLI local**: URL backend, store por defecto
+- **Acceder a la guía completa** de integración con instrucciones paso a paso
+
+Accede a: **http://localhost:5173/integration** después de iniciar el frontend.
+
+### Configuración para Agentes
+
+#### Gemini CLI
+
+Añade a tu `settings.json`:
+
+```json
+{
+  "mcpServers": {
+    "filesearch-gemini": {
+      "type": "stdio",
+      "command": "python",
+      "args": ["/path/to/filesearch-gemini/backend/mcp_server.py"]
+    }
+  }
+}
+```
+
+#### Claude Code
+
+```bash
+claude mcp add filesearch-gemini \
+  --transport stdio \
+  --command "python" \
+  --args "backend/mcp_server.py"
+```
+
+#### Codex CLI
+
+```bash
+codex mcp-server add filesearch-gemini \
+  --command "python" \
+  --args "/path/to/filesearch-gemini/backend/mcp_server.py"
+```
+
+**📖 Documentación completa**: Ver [MCP_INTEGRATION.md](./MCP_INTEGRATION.md) para instrucciones detalladas, ejemplos de uso y troubleshooting.
+
+---
+
 ## 📖 Uso de la Aplicación
 
-### 1. Configurar API Key
+La aplicación se puede usar de **4 formas diferentes**:
+
+1. **Interfaz Web** (navegador en http://localhost:5173)
+2. **API REST** (HTTP requests a http://localhost:8000)
+3. **Servidor MCP** (para agentes LLM)
+4. **CLI local** (comando `filesearch-gemini`)
+
+### Uso desde la Interfaz Web
+
+#### 1. Configurar API Key
 
 1. Navega a la sección **Configuration**
 2. Introduce tu Google API Key
@@ -341,6 +455,8 @@ curl -X POST http://localhost:8000/query \
 
 - **Backend**: Arquitectura por capas (API → Services → Google Client)
 - **Frontend**: Componentes funcionales con React Hooks
+- **MCP Server**: FastMCP para exposición de herramientas a LLM agents
+- **CLI**: Click + Rich para interfaz de línea de comandos
 - **Tipado**: TypeScript estricto en frontend, Pydantic en backend
 - **Estado**: React Query para datos del servidor, useState para UI local
 
@@ -398,6 +514,8 @@ Los logs aparecen en la consola del servidor backend.
 - [ ] Soporte para más formatos de documentos
 - [ ] Búsqueda y filtrado avanzado de documentos en UI
 - [ ] Tests unitarios y de integración
+- [x] **✅ COMPLETADO**: Servidor MCP para integración con LLM agents
+- [x] **✅ COMPLETADO**: CLI local para uso desde terminal y agents
 
 ## 📚 Documentación de Referencia
 

@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "filesearch-gemini": {
+      "type": "stdio",
+      "command": "python",
+      "args": [
+        "/absolute/path/to/filesearch-gemini/backend/mcp_server.py"
+      ],
+      "env": {
+        "FILESEARCH_BACKEND_URL": "http://localhost:8000"
+      },
+      "description": "File Search RAG with Google Gemini - manage stores, documents and RAG queries"
+    }
+  }
+}

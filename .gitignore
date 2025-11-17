@@ -65,3 +65,11 @@ htmlcov/
 *.tmp
 *.temp
 .cache/
+
+# CLI configuration (user-specific)
+.filesearch-gemini/
+
+# Database (local development)
+*.db
+*.sqlite
+*.sqlite3

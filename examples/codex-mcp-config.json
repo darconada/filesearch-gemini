@@ -1,0 +1,14 @@
+{
+  "servers": {
+    "filesearch-gemini": {
+      "command": "python",
+      "args": [
+        "/absolute/path/to/filesearch-gemini/backend/mcp_server.py"
+      ],
+      "transport": "stdio",
+      "env": {
+        "FILESEARCH_BACKEND_URL": "http://localhost:8000"
+      }
+    }
+  }
+}

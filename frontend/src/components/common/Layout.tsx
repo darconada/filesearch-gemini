@@ -25,8 +25,11 @@ import {
   Search,
   Settings,
   CloudSync,
+  Cable,
+  Folder,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
+import ProjectSelector from './ProjectSelector';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -37,10 +40,12 @@ const drawerWidth = 240;
 
 const menuItems = [
   { text: 'Configuration', icon: <Settings />, path: '/config' },
+  { text: 'Projects', icon: <Folder />, path: '/projects' },
   { text: 'Stores', icon: <Storage />, path: '/stores' },
   { text: 'Documents', icon: <Description />, path: '/documents' },
   { text: 'RAG Query', icon: <Search />, path: '/query' },
   { text: 'Drive Sync', icon: <CloudSync />, path: '/drive' },
+  { text: 'LLM Integration', icon: <Cable />, path: '/integration' },
 ];
 
 const Layout: React.FC<LayoutProps> = ({ children, onToggleTheme }) => {
@@ -100,6 +105,7 @@ const Layout: React.FC<LayoutProps> = ({ children, onToggleTheme }) => {
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
             Google File Search RAG Application
           </Typography>
+          <ProjectSelector />
           <IconButton color="inherit" onClick={onToggleTheme}>
             {theme.palette.mode === 'dark' ? <Brightness7 /> : <Brightness4 />}
           </IconButton>

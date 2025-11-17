@@ -1,0 +1,11 @@
+# File Search CLI Configuration
+# Save this file as ~/.filesearch-gemini/config.yaml
+
+# Backend URL (where the FastAPI server is running)
+backend_url: http://localhost:8000
+
+# Optional: Store your API key here (alternatively use env var GOOGLE_API_KEY)
+# api_key: your_google_api_key_here
+
+# Optional: Default store ID to use if not specified
+# default_store_id: fileSearchStores/abc123xyz
