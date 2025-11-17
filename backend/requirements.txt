@@ -17,3 +17,16 @@ alembic==1.14.0
 
 # Scheduler for auto-sync
 apscheduler==3.10.4
+
+# MCP Server integration
+fastmcp==0.6.1
+httpx==0.28.1
+
+# CLI tool
+click==8.1.8
+rich==13.9.4
+pyyaml==6.0.2
+
+# Testing
+pytest==8.3.4
+pytest-mock==3.14.0

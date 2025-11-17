@@ -1,5 +1,92 @@
 # Changelog
 
+## v2.1.0 - Integración MCP y CLI para LLM Agents
+
+### 🆕 Nuevas Funcionalidades
+
+#### Servidor MCP (Model Context Protocol)
+- **Servidor MCP completo** con 21 herramientas para LLM agents
+  - Compatible con Gemini CLI, Claude Code y Codex CLI
+  - Implementado con FastMCP para mejor DX
+  - Transporte stdio (modo por defecto, recomendado)
+  - Comunicación HTTP con el backend FastAPI
+
+- **Herramientas MCP disponibles**:
+  - **Configuración**: `set_api_key`, `get_config_status`
+  - **Stores**: `create_store`, `list_stores`, `get_store`, `delete_store`
+  - **Documentos**: `upload_document`, `list_documents`, `update_document`, `delete_document`
+  - **Consultas RAG**: `rag_query` (con metadata filtering y citations)
+  - **Drive Sync**: `create_drive_link`, `list_drive_links`, `get_drive_link`, `delete_drive_link`, `sync_drive_link_now`
+
+#### CLI Local (filesearch-gemini)
+- **Interfaz de línea de comandos completa** para uso directo o desde agents
+  - Implementado con Click + Rich para excelente UX
+  - Subcomandos organizados por funcionalidad
+  - Salida formateada con tablas y colores
+  - Soporte para JSON output (útil para scripting)
+
+- **Comandos disponibles**:
+  - `config`: Gestión de configuración (API key, backend URL, status)
+  - `stores`: Operaciones con stores (list, create, get, delete)
+  - `docs`: Gestión de documentos (list, upload, delete)
+  - `query`: Consultas RAG con metadata filtering
+  - `drive`: Sincronización con Google Drive (list, create, sync-now, delete)
+
+- **Configuración flexible**:
+  - Variables de entorno (prioridad máxima)
+  - Archivo de configuración `~/.filesearch-gemini/config.yaml`
+  - Valores por defecto sensatos
+
+### 📖 Documentación
+
+- **MCP_INTEGRATION.md**: Guía completa de integración
+  - Configuración paso a paso para cada cliente MCP
+  - Ejemplos de uso prácticos
+  - Troubleshooting y best practices
+  - Workflow completo de ejemplo
+
+- **Ejemplos de configuración** en `examples/`:
+  - `gemini-cli-settings.json` - Config para Gemini CLI
+  - `claude-code-mcp.json` - Config para Claude Code
+  - `codex-mcp-config.json` - Config para Codex CLI
+  - `cli-config.yaml` - Config para el CLI local
+
+- **README actualizado** con sección de integración MCP/CLI
+
+### 🧪 Tests
+
+- Tests básicos para MCP server (`tests/test_mcp_server.py`)
+- Tests básicos para CLI (`tests/test_cli.py`)
+- Infraestructura de testing con pytest
+
+### 🔧 Dependencias Nuevas
+
+- `fastmcp==0.6.1` - Framework MCP simplificado
+- `httpx==0.28.1` - Cliente HTTP moderno para MCP y CLI
+- `click==8.1.8` - Framework CLI
+- `rich==13.9.4` - Terminal output mejorado
+- `pyyaml==6.0.2` - Configuración YAML
+- `pytest==8.3.4` - Testing framework
+- `pytest-mock==3.14.0` - Mocking para tests
+
+### 🎯 Casos de Uso Habilitados
+
+Ahora puedes usar File Search desde:
+1. **Interfaz Web** (navegador) - experiencia visual completa
+2. **API REST** (curl, Postman) - integración HTTP directa
+3. **Servidor MCP** (Gemini CLI, Claude Code, Codex) - integración con LLM agents
+4. **CLI local** (terminal) - uso manual o scripting
+
+### 📝 Notas de Upgrade
+
+Si actualizas desde v2.0.0:
+1. Instala las nuevas dependencias: `pip install -r backend/requirements.txt`
+2. El servidor MCP se inicia con: `python backend/mcp_server.py`
+3. El CLI se ejecuta con: `./filesearch-gemini --help`
+4. Ver [MCP_INTEGRATION.md](./MCP_INTEGRATION.md) para configurar tu LLM agent
+
+---
+
 ## v2.0.0 - Migración a SDK Oficial y Sincronización Completa con Google Drive
 
 ### ⚠️ BREAKING CHANGES
