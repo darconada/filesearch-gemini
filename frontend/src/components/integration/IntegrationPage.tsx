@@ -12,7 +12,7 @@ import {
   Alert,
   CircularProgress,
 } from '@mui/material';
-import { Integration as IntegrationIcon } from '@mui/icons-material';
+import { Cable as IntegrationIcon } from '@mui/icons-material';
 import MCPServerConfig from './MCPServerConfig';
 import CLIConfig from './CLIConfig';
 import IntegrationGuideView from './IntegrationGuide';
