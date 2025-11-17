@@ -70,7 +70,7 @@ export default function CLIConfig() {
   const loadStores = async () => {
     try {
       setLoadingStores(true);
-      const response = await storesApi.list(100); // Cargar hasta 100 stores
+      const response = await storesApi.list(50); // Cargar hasta 50 stores
       setStores(response.stores || []);
     } catch (err: any) {
       console.error('Error loading stores:', err);
