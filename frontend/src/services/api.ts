@@ -11,6 +11,13 @@ import type {
   QueryResponse,
   DriveLink,
   DriveLinkCreate,
+  MCPConfig,
+  MCPConfigUpdate,
+  MCPStatus,
+  CLIConfig,
+  CLIConfigUpdate,
+  CLIStatus,
+  IntegrationGuide,
 } from '@/types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
@@ -184,6 +191,50 @@ export const driveApi = {
 
   sync: async (linkId: string, force = false): Promise<DriveLink> => {
     const response = await api.post(`/drive-links/${linkId}/sync-now`, { force });
+    return response.data;
+  },
+};
+
+// MCP Server API
+export const mcpApi = {
+  getConfig: async (): Promise<MCPConfig> => {
+    const response = await api.get('/integration/mcp/config');
+    return response.data;
+  },
+
+  updateConfig: async (data: MCPConfigUpdate): Promise<MCPConfig> => {
+    const response = await api.post('/integration/mcp/config', data);
+    return response.data;
+  },
+
+  getStatus: async (): Promise<MCPStatus> => {
+    const response = await api.get('/integration/mcp/status');
+    return response.data;
+  },
+};
+
+// CLI API
+export const cliApi = {
+  getConfig: async (): Promise<CLIConfig> => {
+    const response = await api.get('/integration/cli/config');
+    return response.data;
+  },
+
+  updateConfig: async (data: CLIConfigUpdate): Promise<CLIConfig> => {
+    const response = await api.post('/integration/cli/config', data);
+    return response.data;
+  },
+
+  getStatus: async (): Promise<CLIStatus> => {
+    const response = await api.get('/integration/cli/status');
+    return response.data;
+  },
+};
+
+// Integration Guide API
+export const integrationApi = {
+  getGuide: async (): Promise<IntegrationGuide> => {
+    const response = await api.get('/integration/guide');
     return response.data;
   },
 };

@@ -25,6 +25,7 @@ import {
   Search,
   Settings,
   CloudSync,
+  Integration,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -41,6 +42,7 @@ const menuItems = [
   { text: 'Documents', icon: <Description />, path: '/documents' },
   { text: 'RAG Query', icon: <Search />, path: '/query' },
   { text: 'Drive Sync', icon: <CloudSync />, path: '/drive' },
+  { text: 'LLM Integration', icon: <Integration />, path: '/integration' },
 ];
 
 const Layout: React.FC<LayoutProps> = ({ children, onToggleTheme }) => {

@@ -1,5 +1,44 @@
 # Changelog
 
+## v2.1.1 - Gestión Web de Configuración MCP/CLI
+
+### 🆕 Nuevas Funcionalidades
+
+#### Interfaz Web para Configuración
+- **Nueva sección "LLM Integration"** en la interfaz web
+  - Tab "MCP Server": Configurar backend URL y habilitar/deshabilitar servidor
+  - Tab "CLI Local": Configurar CLI con backend URL y store por defecto
+  - Tab "Integration Guide": Guía completa con ejemplos para todos los agents
+  - Botones de copiar/pegar para todas las configuraciones
+  - Ejemplos actualizados dinámicamente según configuración
+
+- **Endpoints backend** para gestión de configuración:
+  - `GET/POST /integration/mcp/config` - Configuración MCP
+  - `GET /integration/mcp/status` - Estado y ejemplos MCP
+  - `GET/POST /integration/cli/config` - Configuración CLI
+  - `GET /integration/cli/status` - Estado y ejemplos CLI
+  - `GET /integration/guide` - Guía completa de integración
+
+- **Persistencia de configuración**:
+  - Archivos JSON en `backend/config/` para MCP y CLI
+  - Configuración accesible desde web, MCP server y CLI
+
+### 🔧 Mejoras
+
+- README actualizado con sección de gestión web
+- Navegación actualizada con nuevo ítem "LLM Integration"
+- Componentes React modulares y reutilizables
+- Type safety completo en TypeScript
+
+### 📝 Notas de Upgrade
+
+Si actualizas desde v2.1.0:
+1. Los archivos de configuración se crean automáticamente en `backend/config/`
+2. Accede a la nueva interfaz en: http://localhost:5173/integration
+3. La configuración anterior (env vars, CLI config) sigue siendo válida
+
+---
+
 ## v2.1.0 - Integración MCP y CLI para LLM Agents
 
 ### 🆕 Nuevas Funcionalidades

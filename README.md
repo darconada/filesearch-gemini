@@ -256,6 +256,17 @@ También puedes usar el CLI directamente desde tu terminal o desde agentes LLM:
 ./filesearch-gemini query --question "¿Qué dice sobre X?" --stores xxx
 ```
 
+### 🌐 Gestión desde la Interfaz Web
+
+La nueva sección **LLM Integration** en la interfaz web te permite:
+
+- **Configurar el servidor MCP**: URL del backend, habilitar/deshabilitar
+- **Ver ejemplos de configuración** para Gemini CLI, Claude Code y Codex con botones copiar/pegar
+- **Configurar el CLI local**: URL backend, store por defecto
+- **Acceder a la guía completa** de integración con instrucciones paso a paso
+
+Accede a: **http://localhost:5173/integration** después de iniciar el frontend.
+
 ### Configuración para Agentes
 
 #### Gemini CLI
