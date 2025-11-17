@@ -87,6 +87,34 @@ export interface DriveLinkCreate {
   sync_interval_minutes?: number;
 }
 
+// Project types (Multi-project support)
+export interface Project {
+  id: number;
+  name: string;
+  description?: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at?: string;
+  has_api_key: boolean;
+}
+
+export interface ProjectCreate {
+  name: string;
+  api_key: string;
+  description?: string;
+}
+
+export interface ProjectUpdate {
+  name?: string;
+  api_key?: string;
+  description?: string;
+}
+
+export interface ProjectList {
+  projects: Project[];
+  active_project_id?: number;
+}
+
 // MCP and CLI Integration types
 export interface MCPConfig {
   backend_url: string;

@@ -6,6 +6,19 @@ from app.models.drive import SyncMode
 import enum
 
 
+class ProjectDB(Base):
+    """Modelo de base de datos para proyectos de Google AI Studio"""
+    __tablename__ = "projects"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    name = Column(String, nullable=False, unique=True)
+    api_key = Column(String, nullable=False)  # TODO: Encrypt in production
+    description = Column(String, nullable=True)
+    is_active = Column(Boolean, default=False, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+
 class DriveLinkDB(Base):
     """Modelo de base de datos para vínculos Drive"""
     __tablename__ = "drive_links"

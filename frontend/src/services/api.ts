@@ -18,6 +18,10 @@ import type {
   CLIConfigUpdate,
   CLIStatus,
   IntegrationGuide,
+  Project,
+  ProjectCreate,
+  ProjectUpdate,
+  ProjectList,
 } from '@/types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
@@ -235,6 +239,44 @@ export const cliApi = {
 export const integrationApi = {
   getGuide: async (): Promise<IntegrationGuide> => {
     const response = await api.get('/integration/guide');
+    return response.data;
+  },
+};
+
+// Projects API
+export const projectsApi = {
+  list: async (): Promise<ProjectList> => {
+    const response = await api.get('/projects');
+    return response.data;
+  },
+
+  create: async (data: ProjectCreate): Promise<Project> => {
+    const response = await api.post('/projects', data);
+    return response.data;
+  },
+
+  get: async (projectId: number): Promise<Project> => {
+    const response = await api.get(`/projects/${projectId}`);
+    return response.data;
+  },
+
+  getActive: async (): Promise<Project> => {
+    const response = await api.get('/projects/active');
+    return response.data;
+  },
+
+  update: async (projectId: number, data: ProjectUpdate): Promise<Project> => {
+    const response = await api.put(`/projects/${projectId}`, data);
+    return response.data;
+  },
+
+  activate: async (projectId: number): Promise<Project> => {
+    const response = await api.post(`/projects/${projectId}/activate`);
+    return response.data;
+  },
+
+  delete: async (projectId: number) => {
+    const response = await api.delete(`/projects/${projectId}`);
     return response.data;
   },
 };

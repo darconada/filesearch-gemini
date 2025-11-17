@@ -78,6 +78,19 @@ const ConfigPage: React.FC = () => {
         Configuration
       </Typography>
 
+      {/* Multi-Project Info Alert */}
+      <Alert severity="info" sx={{ mb: 3 }}>
+        <Typography variant="body2" gutterBottom>
+          <strong>New: Multi-Project Support!</strong>
+        </Typography>
+        <Typography variant="body2">
+          You can now manage multiple Google AI Studio projects with different API keys.
+          Visit the <strong>Projects</strong> page to create and manage your projects.
+          Each project can have up to 10 File Search stores. The API key configured here
+          applies to the currently active project.
+        </Typography>
+      </Alert>
+
       {/* Status Card */}
       <Card sx={{ mb: 3 }}>
         <CardContent>

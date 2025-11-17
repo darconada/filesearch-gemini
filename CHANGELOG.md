@@ -1,5 +1,97 @@
 # Changelog
 
+## v2.2.0 - Soporte Multi-Proyecto
+
+### 🆕 Nuevas Funcionalidades
+
+#### Gestión de Múltiples Proyectos de Google AI Studio
+
+- **Soporte completo para múltiples proyectos**:
+  - Crea y gestiona múltiples proyectos de Google AI Studio
+  - Cada proyecto con su propia API key independiente
+  - Hasta 10 File Search stores por proyecto (límite de Google)
+  - Un proyecto activo a la vez
+  - Cambio rápido entre proyectos sin perder contexto
+
+- **Nueva página "Projects"** en la interfaz web:
+  - Crear nuevos proyectos con nombre, API key y descripción
+  - Listar todos los proyectos con estado de activación
+  - Editar proyectos existentes (nombre, API key, descripción)
+  - Eliminar proyectos que ya no necesites
+  - Activar/desactivar proyectos con un click
+  - Validación automática de API keys al crear/actualizar
+
+- **Selector de proyecto en el header**:
+  - Dropdown en la barra superior para ver el proyecto activo
+  - Cambio rápido entre proyectos desde cualquier página
+  - Icono visual del proyecto activo
+  - Recarga automática al cambiar de proyecto
+
+- **Base de datos para proyectos**:
+  - Tabla SQLite para almacenar proyectos
+  - Campos: id, name, api_key, description, is_active, timestamps
+  - Migración automática al iniciar la aplicación
+  - TODO: Encriptación de API keys para producción
+
+### 🔧 Backend - Nuevos Endpoints
+
+- `POST /projects` - Crear nuevo proyecto con validación de API key
+- `GET /projects` - Listar todos los proyectos + proyecto activo
+- `GET /projects/active` - Obtener proyecto actualmente activo
+- `GET /projects/{id}` - Obtener proyecto específico
+- `PUT /projects/{id}` - Actualizar proyecto
+- `POST /projects/{id}/activate` - Activar proyecto (desactiva los demás)
+- `DELETE /projects/{id}` - Eliminar proyecto
+
+### 🎨 Frontend - Nuevos Componentes
+
+- `ProjectsPage.tsx` - Página completa de gestión de proyectos
+- `ProjectSelector.tsx` - Selector de proyecto para el header
+- Actualización de `ConfigPage.tsx` con aviso de multi-proyecto
+- Nuevos tipos TypeScript: `Project`, `ProjectCreate`, `ProjectUpdate`, `ProjectList`
+
+### 📖 Documentación
+
+- Nuevo archivo `MULTI_PROJECT.md` con guía completa:
+  - Conceptos clave (proyectos, proyecto activo)
+  - Instrucciones de uso paso a paso
+  - Documentación de API endpoints
+  - Schema de base de datos
+  - Guía de migración desde versión anterior
+  - Mejores prácticas
+  - Troubleshooting
+
+### 🔄 Cambios en Componentes Existentes
+
+- **Configuration Page**: Nuevo banner informativo sobre multi-proyecto
+- **Layout**: Nuevo ítem de menú "Projects" con icono de carpeta
+- **API Client**: Nuevos métodos en `projectsApi` para todas las operaciones
+
+### 📝 Notas de Upgrade
+
+Si actualizas desde v2.1.x:
+1. La base de datos se actualizará automáticamente con la tabla `projects`
+2. Tu API key actual seguirá funcionando
+3. Crea tu primer proyecto en la página "Projects"
+4. El primer proyecto que crees se activará automáticamente
+5. Puedes seguir usando la página "Configuration" para actualizar el API key del proyecto activo
+
+### 🎯 Casos de Uso
+
+- **Múltiples clientes**: Un proyecto por cliente con datos aislados
+- **Múltiples entornos**: Proyectos separados para desarrollo, staging y producción
+- **Límite de stores**: Supera el límite de 10 stores usando múltiples proyectos
+- **Organización**: Agrupa stores relacionados por proyecto
+
+### ⚠️ Limitaciones
+
+- Solo un proyecto puede estar activo a la vez
+- Al cambiar de proyecto, la página se recarga completamente
+- API keys almacenadas en texto plano (TODO: encriptación)
+- No se pueden usar múltiples proyectos simultáneamente
+
+---
+
 ## v2.1.1 - Gestión Web de Configuración MCP/CLI
 
 ### 🆕 Nuevas Funcionalidades

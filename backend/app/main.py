@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from app.config import settings
-from app.api import config, stores, documents, query, drive, mcp_config
+from app.api import config, stores, documents, query, drive, mcp_config, projects
 from app.database import init_db
 from app.scheduler import start_scheduler, stop_scheduler
 import logging
@@ -58,6 +58,7 @@ app.add_middleware(
 # porque stores tiene /{store_id:path} que es greedy y capturaría
 # las rutas de documents si stores se registra primero
 app.include_router(config.router)
+app.include_router(projects.router)   # Projects management
 app.include_router(documents.router)  # Primero las rutas más específicas
 app.include_router(stores.router)     # Después las rutas con :path
 app.include_router(query.router)

@@ -71,6 +71,14 @@ Esta aplicación usa el **SDK oficial `google-genai`** (v1.6.1+). El SDK anterio
   - Compatible con LLM agents
   - Salida formateada con Rich
 
+- **🆕 Soporte Multi-Proyecto**
+  - Gestiona múltiples proyectos de Google AI Studio
+  - Cada proyecto con su propia API key
+  - Hasta 10 stores por proyecto
+  - Selector de proyecto en el header
+  - Activación rápida entre proyectos
+  - Ver [MULTI_PROJECT.md](MULTI_PROJECT.md) para más detalles
+
 - **Base para Sincronización con Google Drive**
   - Modelos de datos preparados
   - Endpoints stub implementados

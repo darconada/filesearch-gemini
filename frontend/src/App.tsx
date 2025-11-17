@@ -13,6 +13,7 @@ import DocumentsPage from '@/components/documents/DocumentsPage';
 import QueryPage from '@/components/query/QueryPage';
 import DrivePage from '@/components/drive/DrivePage';
 import IntegrationPage from '@/components/integration/IntegrationPage';
+import ProjectsPage from '@/components/projects/ProjectsPage';
 
 // Create React Query client
 const queryClient = new QueryClient({
@@ -50,6 +51,7 @@ function App() {
             <Routes>
               <Route path="/" element={<Navigate to="/config" replace />} />
               <Route path="/config" element={<ConfigPage />} />
+              <Route path="/projects" element={<ProjectsPage />} />
               <Route path="/stores" element={<StoresPage />} />
               <Route path="/documents" element={<DocumentsPage />} />
               <Route path="/query" element={<QueryPage />} />
