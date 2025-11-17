@@ -16,13 +16,17 @@ import {
   ListItemText,
   IconButton,
   Tooltip,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material';
 import {
   ContentCopy as CopyIcon,
   Check as CheckIcon,
 } from '@mui/icons-material';
-import { cliApi } from '@/services/api';
-import type { CLIConfig as CLIConfigType, CLIStatus } from '@/types';
+import { cliApi, storesApi } from '@/services/api';
+import type { CLIConfig as CLIConfigType, CLIStatus, Store } from '@/types';
 
 export default function CLIConfig() {
   const [loading, setLoading] = useState(true);
@@ -32,6 +36,8 @@ export default function CLIConfig() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [copiedStates, setCopiedStates] = useState<Record<number, boolean>>({});
+  const [stores, setStores] = useState<Store[]>([]);
+  const [loadingStores, setLoadingStores] = useState(false);
 
   // Form state
   const [backendUrl, setBackendUrl] = useState('http://localhost:8000');
@@ -39,6 +45,7 @@ export default function CLIConfig() {
 
   useEffect(() => {
     loadConfig();
+    loadStores();
   }, []);
 
   const loadConfig = async () => {
@@ -57,6 +64,19 @@ export default function CLIConfig() {
       setError(err.response?.data?.detail || err.message || 'Error loading CLI configuration');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadStores = async () => {
+    try {
+      setLoadingStores(true);
+      const response = await storesApi.list(100); // Cargar hasta 100 stores
+      setStores(response.stores || []);
+    } catch (err: any) {
+      console.error('Error loading stores:', err);
+      // No mostramos error aquí, solo en consola
+    } finally {
+      setLoadingStores(false);
     }
   };
 
@@ -130,14 +150,30 @@ export default function CLIConfig() {
               sx={{ mb: 2 }}
             />
 
-            <TextField
-              fullWidth
-              label="Default Store ID (optional)"
-              value={defaultStoreId}
-              onChange={(e) => setDefaultStoreId(e.target.value)}
-              helperText="Default store to use when not specified (e.g., fileSearchStores/abc123)"
-              sx={{ mb: 2 }}
-            />
+            <FormControl fullWidth sx={{ mb: 2 }}>
+              <InputLabel id="default-store-label">Default Store (optional)</InputLabel>
+              <Select
+                labelId="default-store-label"
+                value={defaultStoreId}
+                onChange={(e) => setDefaultStoreId(e.target.value)}
+                label="Default Store (optional)"
+                disabled={loadingStores}
+              >
+                <MenuItem value="">
+                  <em>None</em>
+                </MenuItem>
+                {stores.map((store) => (
+                  <MenuItem key={store.name} value={store.name}>
+                    {store.display_name} ({store.name})
+                  </MenuItem>
+                ))}
+              </Select>
+              {stores.length === 0 && !loadingStores && (
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
+                  No stores available. Create a store first in the Stores section.
+                </Typography>
+              )}
+            </FormControl>
 
             <Box sx={{ mt: 3 }}>
               <Button
