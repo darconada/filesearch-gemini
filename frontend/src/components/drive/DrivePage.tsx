@@ -32,6 +32,7 @@ import {
   Switch,
 } from '@mui/material';
 import { Add, Delete, Sync } from '@mui/icons-material';
+import { Tooltip } from '@mui/material';
 import { driveApi, storesApi } from '@/services/api';
 import type { DriveLink, Store } from '@/types';
 import { SyncMode } from '@/types';
@@ -167,7 +168,7 @@ const DrivePage: React.FC = () => {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>Drive File ID</TableCell>
+                <TableCell>Drive File</TableCell>
                 <TableCell>Store</TableCell>
                 <TableCell>Mode</TableCell>
                 <TableCell>Status</TableCell>
@@ -178,7 +179,19 @@ const DrivePage: React.FC = () => {
             <TableBody>
               {links.map((link) => (
                 <TableRow key={link.id}>
-                  <TableCell>{link.drive_file_id}</TableCell>
+                  <TableCell>
+                    {link.drive_file_name ? (
+                      <Tooltip title={`File ID: ${link.drive_file_id}`} arrow>
+                        <Box component="span" sx={{ cursor: 'help' }}>
+                          {link.drive_file_name}
+                        </Box>
+                      </Tooltip>
+                    ) : (
+                      <Typography variant="body2" color="text.secondary" sx={{ fontFamily: 'monospace', fontSize: '0.75rem' }}>
+                        {link.drive_file_id}
+                      </Typography>
+                    )}
+                  </TableCell>
                   <TableCell>{getStoreDisplayName(link.store_id)}</TableCell>
                   <TableCell>
                     <Chip

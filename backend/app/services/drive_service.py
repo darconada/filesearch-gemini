@@ -29,6 +29,7 @@ class DriveService:
         return DriveLinkResponse(
             id=db_link.id,
             drive_file_id=db_link.drive_file_id,
+            drive_file_name=db_link.drive_file_name,
             store_id=db_link.store_id,
             document_id=db_link.document_id,
             sync_mode=db_link.sync_mode,
@@ -170,6 +171,7 @@ class DriveService:
 
             # 6. Actualizar el vínculo
             link.document_id = document.name
+            link.drive_file_name = file_name
             link.last_synced_at = datetime.now(timezone.utc)
             link.drive_last_modified_at = drive_modified_time
             link.status = "synced"

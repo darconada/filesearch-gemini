@@ -26,6 +26,7 @@ class DriveLinkDB(Base):
 
     id = Column(String, primary_key=True, index=True)
     drive_file_id = Column(String, nullable=False, index=True)
+    drive_file_name = Column(String, nullable=True)  # Nombre del archivo en Drive
     store_id = Column(String, nullable=False)
     document_id = Column(String, nullable=True)
     sync_mode = Column(SQLEnum(SyncMode), nullable=False)

@@ -23,6 +23,7 @@ class DriveLinkResponse(BaseModel):
     """Response de un vínculo Drive"""
     id: str = Field(..., description="ID del vínculo")
     drive_file_id: str
+    drive_file_name: Optional[str] = Field(None, description="Nombre del archivo en Drive")
     store_id: str
     document_id: Optional[str] = Field(None, description="ID del documento en File Search (si ya está sincronizado)")
     sync_mode: SyncMode

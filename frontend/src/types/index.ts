@@ -70,6 +70,7 @@ export enum SyncMode {
 export interface DriveLink {
   id: string;
   drive_file_id: string;
+  drive_file_name?: string;
   store_id: string;
   document_id?: string;
   sync_mode: SyncMode;
