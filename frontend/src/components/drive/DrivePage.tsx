@@ -50,6 +50,18 @@ const DrivePage: React.FC = () => {
 
   useEffect(() => {
     loadData();
+
+    // Listen for active project changes and reload data
+    const handleProjectChange = () => {
+      console.log('Active project changed, reloading Drive links...');
+      loadData();
+    };
+
+    window.addEventListener('activeProjectChanged', handleProjectChange);
+
+    return () => {
+      window.removeEventListener('activeProjectChanged', handleProjectChange);
+    };
   }, []);
 
   const loadData = async () => {

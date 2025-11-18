@@ -57,6 +57,21 @@ const DocumentsPage: React.FC = () => {
     if (storeId) {
       loadDocuments(storeId);
     }
+
+    // Listen for active project changes and reload documents
+    const handleProjectChange = () => {
+      console.log('Active project changed, reloading documents...');
+      const currentStoreId = localStorage.getItem('activeStoreId');
+      if (currentStoreId) {
+        loadDocuments(currentStoreId);
+      }
+    };
+
+    window.addEventListener('activeProjectChanged', handleProjectChange);
+
+    return () => {
+      window.removeEventListener('activeProjectChanged', handleProjectChange);
+    };
   }, []);
 
   const loadDocuments = async (storeId: string) => {

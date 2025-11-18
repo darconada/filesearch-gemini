@@ -193,6 +193,9 @@ export default function ProjectsPage() {
       await projectsApi.activate(projectId);
       setSuccess('Project activated successfully!');
       loadProjects();
+
+      // Emit event to notify other components that active project changed
+      window.dispatchEvent(new CustomEvent('activeProjectChanged', { detail: { projectId } }));
     } catch (err: any) {
       setError(err.response?.data?.detail || err.message || 'Error activating project');
     }

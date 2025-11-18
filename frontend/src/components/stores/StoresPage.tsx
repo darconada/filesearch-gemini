@@ -60,6 +60,21 @@ const StoresPage: React.FC = () => {
       setActiveStoreId(savedStoreId);
     }
     loadStores();
+
+    // Listen for active project changes and reload stores
+    const handleProjectChange = () => {
+      console.log('Active project changed, reloading stores...');
+      // Clear active store when project changes
+      setActiveStoreId(null);
+      localStorage.removeItem('activeStoreId');
+      loadStores();
+    };
+
+    window.addEventListener('activeProjectChanged', handleProjectChange);
+
+    return () => {
+      window.removeEventListener('activeProjectChanged', handleProjectChange);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
