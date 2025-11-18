@@ -128,8 +128,8 @@ class StoreService:
         try:
             client = self.google_client.get_client()
 
-            # Eliminar con force=True para borrar todos los documentos
-            client.file_search_stores.delete(name=store_id, force=True)
+            # Eliminar el store (el nuevo SDK no acepta parámetro force)
+            client.file_search_stores.delete(name=store_id)
 
             logger.info(f"Store deleted: {store_id}")
 

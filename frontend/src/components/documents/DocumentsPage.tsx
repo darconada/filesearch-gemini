@@ -53,9 +53,27 @@ const DocumentsPage: React.FC = () => {
 
   useEffect(() => {
     console.log('DocumentsPage: useEffect mounting, setting up event listeners');
-    // Don't read activeStoreId from localStorage on mount
-    // Only show a store when user explicitly selects it via activeStoreChanged event
-    // This prevents showing stores from previous projects
+
+    // Try to load store from localStorage and validate it exists in current project
+    const validateAndLoadStore = async () => {
+      const savedStoreId = localStorage.getItem('activeStoreId');
+      if (savedStoreId) {
+        console.log('DocumentsPage: Found saved storeId in localStorage:', savedStoreId);
+        // Validate that this store exists in the current project by trying to load documents
+        try {
+          setActiveStoreId(savedStoreId);
+          await loadDocuments(savedStoreId);
+          console.log('DocumentsPage: Successfully loaded documents from saved store');
+        } catch (err) {
+          console.error('DocumentsPage: Saved store is not valid for current project, clearing it');
+          setActiveStoreId(null);
+          localStorage.removeItem('activeStoreId');
+          setError('Store not found in current project. Please select a store.');
+        }
+      }
+    };
+
+    validateAndLoadStore();
 
     // Listen for active project changes and clear documents
     const handleProjectChange = () => {
