@@ -52,11 +52,10 @@ const DocumentsPage: React.FC = () => {
   const [activeStoreId, setActiveStoreId] = useState<string | null>(null);
 
   useEffect(() => {
+    // Don't auto-load from localStorage - only load when user explicitly selects a store
+    // This prevents loading documents from a previous project's store with wrong API key
     const storeId = localStorage.getItem('activeStoreId');
     setActiveStoreId(storeId);
-    if (storeId) {
-      loadDocuments(storeId);
-    }
 
     // Listen for active project changes and clear documents
     const handleProjectChange = () => {
@@ -65,7 +64,7 @@ const DocumentsPage: React.FC = () => {
       setDocuments([]);
       setActiveStoreId(null);
       setError(null);
-      // The activeStoreId will be cleared by StoresPage, so we don't try to reload
+      localStorage.removeItem('activeStoreId');
     };
 
     // Listen for active store changes and reload documents
