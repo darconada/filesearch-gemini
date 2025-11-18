@@ -22,6 +22,7 @@ import type {
   ProjectCreate,
   ProjectUpdate,
   ProjectList,
+  AvailableModels,
 } from '@/types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
@@ -42,6 +43,11 @@ export const configApi = {
 
   getStatus: async (): Promise<ConfigStatus> => {
     const response = await api.get('/config/status');
+    return response.data;
+  },
+
+  getModels: async (): Promise<AvailableModels> => {
+    const response = await api.get('/config/models');
     return response.data;
   },
 };
