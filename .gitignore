@@ -26,6 +26,13 @@ env/
 # Environment variables
 .env
 .env.local
+backend/.env
+
+# Google OAuth credentials (NEVER commit these!)
+credentials.json
+backend/credentials.json
+token.json
+backend/token.json
 
 # IDE
 .vscode/
