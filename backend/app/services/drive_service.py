@@ -129,9 +129,14 @@ class DriveService:
             file_name = file_metadata.get('name', 'untitled')
 
             # 2. Verificar si necesitamos sincronizar
+            # Asegurar que drive_last_modified_at tenga timezone (fix para SQLite)
+            last_modified = link.drive_last_modified_at
+            if last_modified and last_modified.tzinfo is None:
+                last_modified = last_modified.replace(tzinfo=timezone.utc)
+
             needs_sync = force or \
-                        link.drive_last_modified_at is None or \
-                        drive_modified_time > link.drive_last_modified_at
+                        last_modified is None or \
+                        drive_modified_time > last_modified
 
             if not needs_sync:
                 logger.info(f"File {link.drive_file_id} not modified, skipping sync")
