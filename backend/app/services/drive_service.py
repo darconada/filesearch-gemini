@@ -11,7 +11,7 @@ from app.models.db_models import DriveLinkDB
 from app.services.drive_client import drive_client
 from app.services.document_service import document_service
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 
 logger = logging.getLogger(__name__)
@@ -135,7 +135,7 @@ class DriveService:
             if not needs_sync:
                 logger.info(f"File {link.drive_file_id} not modified, skipping sync")
                 link.status = "synced"
-                link.last_synced_at = datetime.utcnow()
+                link.last_synced_at = datetime.now(timezone.utc)
                 db.commit()
                 return self._db_to_response(link)
 
@@ -170,7 +170,7 @@ class DriveService:
 
             # 6. Actualizar el vínculo
             link.document_id = document.name
-            link.last_synced_at = datetime.utcnow()
+            link.last_synced_at = datetime.now(timezone.utc)
             link.drive_last_modified_at = drive_modified_time
             link.status = "synced"
             link.error_message = None
