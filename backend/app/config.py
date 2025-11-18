@@ -47,6 +47,56 @@ class Settings:
         """Verificar si la API key está configurada"""
         return self.api_key is not None and len(self.api_key) > 0
 
+    def save_drive_credentials_json(self, credentials_json: str) -> None:
+        """Guardar credenciales de Drive desde JSON completo"""
+        import json
+
+        # Validar que sea JSON válido
+        try:
+            json.loads(credentials_json)
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Invalid JSON format: {e}")
+
+        # Determinar ruta del archivo
+        if self.drive_credentials_file:
+            creds_path = Path(self.drive_credentials_file)
+        else:
+            # Default: backend/credentials.json
+            creds_path = Path(__file__).parent.parent / "credentials.json"
+
+        # Guardar el archivo
+        creds_path.write_text(credentials_json)
+
+        # Actualizar configuración
+        self.drive_credentials_file = str(creds_path)
+
+        # Actualizar .env
+        if not self.env_path.exists():
+            self.env_path.touch()
+        set_key(self.env_path, "GOOGLE_DRIVE_CREDENTIALS", str(creds_path))
+
+    def save_drive_credentials_manual(self, client_id: str, client_secret: str, project_id: Optional[str] = None) -> None:
+        """Guardar credenciales de Drive desde client_id y client_secret"""
+        import json
+
+        # Construir el JSON de credentials
+        credentials_json = {
+            "installed": {
+                "client_id": client_id,
+                "client_secret": client_secret,
+                "redirect_uris": ["http://localhost"],
+                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                "token_uri": "https://oauth2.googleapis.com/token",
+                "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs"
+            }
+        }
+
+        if project_id:
+            credentials_json["installed"]["project_id"] = project_id
+
+        # Guardar usando el método JSON
+        self.save_drive_credentials_json(json.dumps(credentials_json, indent=2))
+
 
 # Instancia global de configuración
 settings = Settings()

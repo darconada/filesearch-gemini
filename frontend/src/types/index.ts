@@ -217,3 +217,21 @@ export interface IntegrationGuide {
     documentation: string;
   };
 }
+
+// Google Drive Credentials types
+export interface DriveCredentialsJSON {
+  credentials_json: string;
+}
+
+export interface DriveCredentialsManual {
+  client_id: string;
+  client_secret: string;
+  project_id?: string;
+}
+
+export interface DriveCredentialsStatus {
+  credentials_configured: boolean;
+  token_exists: boolean;
+  drive_connected: boolean;
+  error_message?: string;
+}

@@ -12,6 +12,7 @@ import StoresPage from '@/components/stores/StoresPage';
 import DocumentsPage from '@/components/documents/DocumentsPage';
 import QueryPage from '@/components/query/QueryPage';
 import DrivePage from '@/components/drive/DrivePage';
+import DriveSetupPage from '@/components/drive/DriveSetupPage';
 import IntegrationPage from '@/components/integration/IntegrationPage';
 import ProjectsPage from '@/components/projects/ProjectsPage';
 
@@ -56,6 +57,7 @@ function App() {
               <Route path="/documents" element={<DocumentsPage />} />
               <Route path="/query" element={<QueryPage />} />
               <Route path="/drive" element={<DrivePage />} />
+              <Route path="/drive-setup" element={<DriveSetupPage />} />
               <Route path="/integration" element={<IntegrationPage />} />
             </Routes>
           </Layout>
