@@ -116,11 +116,15 @@ const StoresPage: React.FC = () => {
   };
 
   const handleSelectStore = (storeId: string) => {
+    console.log('StoresPage: handleSelectStore called with storeId:', storeId);
     setActiveStoreId(storeId);
     localStorage.setItem('activeStoreId', storeId);
 
     // Emit event to notify DocumentsPage that active store changed
-    window.dispatchEvent(new CustomEvent('activeStoreChanged', { detail: { storeId } }));
+    const event = new CustomEvent('activeStoreChanged', { detail: { storeId } });
+    console.log('StoresPage: Dispatching activeStoreChanged event with storeId:', storeId);
+    window.dispatchEvent(event);
+    console.log('StoresPage: Event dispatched successfully');
   };
 
   if (loading) {

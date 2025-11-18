@@ -52,13 +52,14 @@ const DocumentsPage: React.FC = () => {
   const [activeStoreId, setActiveStoreId] = useState<string | null>(null);
 
   useEffect(() => {
+    console.log('DocumentsPage: useEffect mounting, setting up event listeners');
     // Don't read activeStoreId from localStorage on mount
     // Only show a store when user explicitly selects it via activeStoreChanged event
     // This prevents showing stores from previous projects
 
     // Listen for active project changes and clear documents
     const handleProjectChange = () => {
-      console.log('Active project changed, clearing documents...');
+      console.log('DocumentsPage: Active project changed, clearing documents...');
       // Clear documents and active store when project changes
       setDocuments([]);
       setActiveStoreId(null);
@@ -68,16 +69,19 @@ const DocumentsPage: React.FC = () => {
 
     // Listen for active store changes and reload documents
     const handleStoreChange = (event: any) => {
+      console.log('DocumentsPage: Received activeStoreChanged event:', event);
       const { storeId } = event.detail;
-      console.log('Active store changed, reloading documents for store:', storeId);
+      console.log('DocumentsPage: Active store changed, reloading documents for store:', storeId);
       setActiveStoreId(storeId);
       loadDocuments(storeId);
     };
 
     window.addEventListener('activeProjectChanged', handleProjectChange);
     window.addEventListener('activeStoreChanged', handleStoreChange);
+    console.log('DocumentsPage: Event listeners registered');
 
     return () => {
+      console.log('DocumentsPage: Cleaning up event listeners');
       window.removeEventListener('activeProjectChanged', handleProjectChange);
       window.removeEventListener('activeStoreChanged', handleStoreChange);
     };
