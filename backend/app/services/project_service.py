@@ -39,6 +39,7 @@ class ProjectService:
             name=project_data.name,
             api_key=project_data.api_key,
             description=project_data.description,
+            model_name=project_data.model_name,  # Modelo específico o None para usar el default global
             is_active=is_first  # El primer proyecto se marca como activo automáticamente
         )
 
@@ -119,6 +120,10 @@ class ProjectService:
         if project_data.description is not None:
             project.description = project_data.description
 
+        if project_data.model_name is not None:
+            project.model_name = project_data.model_name
+            logger.info(f"Model updated to: {project_data.model_name or 'default global'}")
+
         db.commit()
         db.refresh(project)
 
@@ -183,6 +188,7 @@ class ProjectService:
             id=db_project.id,
             name=db_project.name,
             description=db_project.description,
+            model_name=db_project.model_name,
             is_active=db_project.is_active,
             created_at=db_project.created_at,
             updated_at=db_project.updated_at,

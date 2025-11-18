@@ -34,6 +34,20 @@ const QueryPage: React.FC = () => {
 
   useEffect(() => {
     loadStores();
+
+    // Listen for active project changes and reload stores
+    const handleProjectChange = () => {
+      console.log('Active project changed, reloading stores in QueryPage...');
+      setSelectedStores([]);
+      setResponse(null);
+      loadStores();
+    };
+
+    window.addEventListener('activeProjectChanged', handleProjectChange);
+
+    return () => {
+      window.removeEventListener('activeProjectChanged', handleProjectChange);
+    };
   }, []);
 
   const loadStores = async () => {

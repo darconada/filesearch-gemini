@@ -52,11 +52,57 @@ const DocumentsPage: React.FC = () => {
   const [activeStoreId, setActiveStoreId] = useState<string | null>(null);
 
   useEffect(() => {
-    const storeId = localStorage.getItem('activeStoreId');
-    setActiveStoreId(storeId);
-    if (storeId) {
+    console.log('DocumentsPage: useEffect mounting, setting up event listeners');
+
+    // Try to load store from localStorage and validate it exists in current project
+    const validateAndLoadStore = async () => {
+      const savedStoreId = localStorage.getItem('activeStoreId');
+      if (savedStoreId) {
+        console.log('DocumentsPage: Found saved storeId in localStorage:', savedStoreId);
+        // Validate that this store exists in the current project by trying to load documents
+        try {
+          setActiveStoreId(savedStoreId);
+          await loadDocuments(savedStoreId);
+          console.log('DocumentsPage: Successfully loaded documents from saved store');
+        } catch (err) {
+          console.error('DocumentsPage: Saved store is not valid for current project, clearing it');
+          setActiveStoreId(null);
+          localStorage.removeItem('activeStoreId');
+          setError('Store not found in current project. Please select a store.');
+        }
+      }
+    };
+
+    validateAndLoadStore();
+
+    // Listen for active project changes and clear documents
+    const handleProjectChange = () => {
+      console.log('DocumentsPage: Active project changed, clearing documents...');
+      // Clear documents and active store when project changes
+      setDocuments([]);
+      setActiveStoreId(null);
+      setError(null);
+      localStorage.removeItem('activeStoreId');
+    };
+
+    // Listen for active store changes and reload documents
+    const handleStoreChange = (event: any) => {
+      console.log('DocumentsPage: Received activeStoreChanged event:', event);
+      const { storeId } = event.detail;
+      console.log('DocumentsPage: Active store changed, reloading documents for store:', storeId);
+      setActiveStoreId(storeId);
       loadDocuments(storeId);
-    }
+    };
+
+    window.addEventListener('activeProjectChanged', handleProjectChange);
+    window.addEventListener('activeStoreChanged', handleStoreChange);
+    console.log('DocumentsPage: Event listeners registered');
+
+    return () => {
+      console.log('DocumentsPage: Cleaning up event listeners');
+      window.removeEventListener('activeProjectChanged', handleProjectChange);
+      window.removeEventListener('activeStoreChanged', handleStoreChange);
+    };
   }, []);
 
   const loadDocuments = async (storeId: string) => {

@@ -10,12 +10,14 @@ Esta aplicación usa el **SDK oficial `google-genai`** (v1.6.1+). El SDK anterio
 - ✅ **Solución**: Instala las dependencias correctas: `pip install -r requirements.txt`
 - ✅ El SDK correcto es `google-genai` (no `google-generativeai`)
 
-**Novedades v2.0**:
-- ✨ **Sincronización COMPLETA con Google Drive** (OAuth 2.0 + detección automática de cambios)
-- ✨ Scheduler automático cada 5 minutos para sync mode AUTO
-- ✨ Base de datos SQLite para persistencia de vínculos Drive
-- ✨ Modelo actualizado: `gemini-2.5-flash` (compatible con File Search)
-- 📖 Ver [CHANGELOG.md](CHANGELOG.md) para detalles completos
+**Novedades v2.2**:
+- ✨ **Soporte Multi-Proyecto**: Gestiona múltiples proyectos de Google AI Studio con diferentes API keys
+- ✨ **Servidor MCP completo**: 21 herramientas para Gemini CLI, Claude Code y Codex CLI
+- ✨ **CLI Local**: Interfaz de línea de comandos con Rich para terminal y agents
+- ✨ **Gestión Web de MCP/CLI**: Configuración desde la interfaz web
+- 📖 Ver [CHANGELOG.md](CHANGELOG.md) para detalles completos v2.2, v2.1 y v2.0
+- 📖 Ver [MCP_INTEGRATION.md](MCP_INTEGRATION.md) para integración con LLM agents
+- 📖 Ver [MULTI_PROJECT.md](MULTI_PROJECT.md) para gestión multi-proyecto
 - 📖 Ver [DRIVE_SETUP.md](DRIVE_SETUP.md) para configurar Google Drive
 
 ## 📋 Características
@@ -94,25 +96,37 @@ backend/
 ├── app/
 │   ├── main.py              # Aplicación FastAPI principal
 │   ├── config.py            # Configuración global
-│   ├── models/              # Modelos Pydantic
+│   ├── database.py          # SQLAlchemy setup
+│   ├── models/              # Modelos Pydantic y DB
+│   │   ├── db_models.py     # Modelos SQLAlchemy (ProjectDB, DriveLinkDB)
 │   │   ├── store.py
 │   │   ├── document.py
 │   │   ├── query.py
 │   │   ├── config.py
-│   │   └── drive.py
+│   │   ├── drive.py
+│   │   ├── project.py       # Modelos multi-proyecto
+│   │   └── mcp_config.py    # Modelos MCP/CLI config
 │   ├── services/            # Lógica de negocio
 │   │   ├── google_client.py
 │   │   ├── store_service.py
 │   │   ├── document_service.py
 │   │   ├── query_service.py
-│   │   └── drive_service.py
-│   └── api/                 # Endpoints REST
-│       ├── config.py
-│       ├── stores.py
-│       ├── documents.py
-│       ├── query.py
-│       └── drive.py
-└── requirements.txt
+│   │   ├── drive_service.py
+│   │   ├── project_service.py      # Gestión de proyectos
+│   │   └── mcp_config_service.py   # Gestión config MCP/CLI
+│   ├── api/                 # Endpoints REST
+│   │   ├── config.py
+│   │   ├── stores.py
+│   │   ├── documents.py
+│   │   ├── query.py
+│   │   ├── drive.py
+│   │   ├── projects.py      # Endpoints multi-proyecto
+│   │   └── mcp_config.py    # Endpoints config MCP/CLI
+│   └── mcp/                 # Servidor MCP
+│       └── server.py        # 21 herramientas MCP
+├── mcp_server.py            # Entry point servidor MCP
+├── requirements.txt
+└── filesearch.db            # Base de datos SQLite
 ```
 
 ### Frontend (React + TypeScript + Vite)
@@ -121,17 +135,19 @@ backend/
 frontend/
 ├── src/
 │   ├── components/          # Componentes React
-│   │   ├── common/         # Layout, navegación
-│   │   ├── config/         # Configuración
-│   │   ├── stores/         # Gestión de stores
-│   │   ├── documents/      # Gestión de documentos
-│   │   ├── query/          # Consultas RAG
-│   │   └── drive/          # Sincronización Drive
-│   ├── services/           # Cliente API
-│   │   └── api.ts
-│   ├── types/              # Tipos TypeScript
-│   │   └── index.ts
-│   ├── theme/              # Temas MUI
+│   │   ├── common/          # Layout, navegación, ProjectSelector
+│   │   ├── config/          # Configuración
+│   │   ├── projects/        # Gestión multi-proyecto
+│   │   ├── stores/          # Gestión de stores
+│   │   ├── documents/       # Gestión de documentos
+│   │   ├── query/           # Consultas RAG
+│   │   ├── drive/           # Sincronización Drive
+│   │   └── integration/     # MCP Server & CLI Config
+│   ├── services/            # Cliente API
+│   │   └── api.ts           # Incluye projectsApi, mcpApi, cliApi
+│   ├── types/               # Tipos TypeScript
+│   │   └── index.ts         # Incluye Project, MCP, CLI types
+│   ├── theme/               # Temas MUI
 │   │   └── theme.ts
 │   ├── App.tsx
 │   └── main.tsx
@@ -195,7 +211,7 @@ cp .env.example .env
 ```bash
 cd backend
 source venv/bin/activate  # o venv\Scripts\activate en Windows
-python -m app.main
+python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 El backend estará disponible en: `http://localhost:8000`
@@ -323,14 +339,30 @@ La aplicación se puede usar de **4 formas diferentes**:
 3. **Servidor MCP** (para agentes LLM)
 4. **CLI local** (comando `filesearch-gemini`)
 
-### Uso desde la Interfaz Web
+### 🚀 Configuración Inicial (Primer Uso)
 
-#### 1. Configurar API Key
+#### Opción 1: Crear un Proyecto (Recomendado - Multi-Proyecto)
 
-1. Navega a la sección **Configuration**
-2. Introduce tu Google API Key
-3. Haz clic en **Save API Key**
+1. **Navega a la sección Projects** en `http://localhost:5173/projects`
+2. **Click en "Create Project"**
+3. **Rellena el formulario:**
+   - **Name**: Por ejemplo "Mi Proyecto Principal"
+   - **API Key**: Tu Google AI Studio API key ([Obtener aquí](https://aistudio.google.com/app/apikey))
+   - **Description** (opcional): Descripción del proyecto
+4. **Click en "Create"**
+5. El proyecto se activará automáticamente y aparecerá en el selector del header
+6. **Reinicia el backend** para que cargue el proyecto activo
+
+#### Opción 2: Configurar API Key directamente (Sin Multi-Proyecto)
+
+1. **Navega a la sección Configuration**
+2. **Introduce tu Google API Key**
+3. **Haz clic en "Save API Key"**
 4. Verifica que el estado muestre "API Key Valid: Valid"
+
+**Nota**: Con la opción 2, solo puedes usar un proyecto. La opción 1 te permite gestionar múltiples proyectos de Google AI Studio.
+
+### Uso desde la Interfaz Web
 
 ### 2. Crear un Store
 
@@ -401,6 +433,24 @@ La API está completamente documentada con Swagger/OpenAPI. Accede a:
 - `DELETE /drive-links/{link_id}` - Eliminar vínculo
 - `POST /drive-links/{link_id}/sync-now` - Sincronizar (stub)
 
+#### Proyectos (Multi-Proyecto)
+- `POST /projects` - Crear proyecto
+- `GET /projects` - Listar proyectos + proyecto activo
+- `GET /projects/active` - Obtener proyecto activo
+- `GET /projects/{id}` - Obtener proyecto específico
+- `PUT /projects/{id}` - Actualizar proyecto
+- `POST /projects/{id}/activate` - Activar proyecto
+- `DELETE /projects/{id}` - Eliminar proyecto
+
+#### Integración MCP/CLI
+- `GET /integration/mcp/config` - Obtener configuración MCP
+- `POST /integration/mcp/config` - Actualizar configuración MCP
+- `GET /integration/mcp/status` - Estado y ejemplos MCP
+- `GET /integration/cli/config` - Obtener configuración CLI
+- `POST /integration/cli/config` - Actualizar configuración CLI
+- `GET /integration/cli/status` - Estado y ejemplos CLI
+- `GET /integration/guide` - Guía completa de integración
+
 ### Ejemplo de Uso con cURL
 
 ```bash
@@ -438,16 +488,33 @@ curl -X POST http://localhost:8000/query \
 - **Feedback visual**: Estados de carga, mensajes de error y éxito
 - **Validación**: Validación de formularios en tiempo real
 
+## 🌐 Puertos y Servicios
+
+La aplicación utiliza los siguientes puertos por defecto:
+
+- **Frontend**: `http://localhost:5173` (Vite dev server)
+- **Backend FastAPI**: `http://localhost:8000` (uvicorn)
+- **MCP Server**: Configurable desde la GUI (recomendado: puerto 8001)
+- **CLI Local**: Se conecta al backend (puerto configurable desde GUI)
+
+**Importante**:
+- El **CLI** y el **MCP Server** NO son servidores independientes
+- El **CLI** es una herramienta de línea de comandos que se conecta al backend FastAPI
+- El **MCP Server** se puede ejecutar en modo stdio (sin puerto) o HTTP (con puerto configurable)
+
 ## 🔐 Seguridad
 
-- La API key se almacena en el backend (archivo `.env`)
-- No se expone en el frontend
+- Las API keys se almacenan en la base de datos SQLite (backend/filesearch.db)
+- También se pueden configurar en el archivo `backend/.env` para retrocompatibilidad
+- Las API keys no se exponen en las respuestas de la API (campo `has_api_key`)
 - CORS configurado solo para orígenes locales
 - Para producción, considera:
+  - **Encriptar API keys** en la base de datos (TODO marcado en el código)
   - Añadir autenticación (JWT, OAuth)
   - Usar HTTPS
   - Configurar CORS apropiadamente
   - Usar variables de entorno seguras
+  - Implementar rate limiting
 
 ## 🛠️ Desarrollo
 

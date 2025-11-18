@@ -27,6 +27,7 @@ import {
   CloudSync,
   Cable,
   Folder,
+  CloudUpload,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import ProjectSelector from './ProjectSelector';
@@ -45,6 +46,7 @@ const menuItems = [
   { text: 'Documents', icon: <Description />, path: '/documents' },
   { text: 'RAG Query', icon: <Search />, path: '/query' },
   { text: 'Drive Sync', icon: <CloudSync />, path: '/drive' },
+  { text: 'Drive Setup', icon: <CloudUpload />, path: '/drive-setup' },
   { text: 'LLM Integration', icon: <Cable />, path: '/integration' },
 ];
 

@@ -23,6 +23,18 @@ export default function ProjectSelector() {
 
   useEffect(() => {
     loadProjects();
+
+    // Listen for project changes from ProjectsPage
+    const handleProjectChanged = () => {
+      console.log('ProjectSelector: Active project changed, reloading projects...');
+      loadProjects();
+    };
+
+    window.addEventListener('activeProjectChanged', handleProjectChanged);
+
+    return () => {
+      window.removeEventListener('activeProjectChanged', handleProjectChanged);
+    };
   }, []);
 
   const loadProjects = async () => {
@@ -45,8 +57,11 @@ export default function ProjectSelector() {
       setSwitching(true);
       await projectsApi.activate(projectId);
       setActiveProjectId(projectId);
-      // Reload the page to refresh all data with the new active project
-      window.location.reload();
+
+      // Emit event to notify all components that active project changed
+      window.dispatchEvent(new CustomEvent('activeProjectChanged', { detail: { projectId } }));
+
+      setSwitching(false);
     } catch (err) {
       console.error('Error switching project:', err);
       setSwitching(false);

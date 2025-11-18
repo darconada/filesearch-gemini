@@ -22,6 +22,8 @@ import type {
   ProjectCreate,
   ProjectUpdate,
   ProjectList,
+  AvailableModels,
+  DriveCredentialsStatus,
 } from '@/types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
@@ -42,6 +44,32 @@ export const configApi = {
 
   getStatus: async (): Promise<ConfigStatus> => {
     const response = await api.get('/config/status');
+    return response.data;
+  },
+
+  getModels: async (): Promise<AvailableModels> => {
+    const response = await api.get('/config/models');
+    return response.data;
+  },
+
+  // Drive credentials
+  setDriveCredentialsJSON: async (credentials_json: string) => {
+    const response = await api.post('/config/drive-credentials/json', { credentials_json });
+    return response.data;
+  },
+
+  setDriveCredentialsManual: async (client_id: string, client_secret: string, project_id?: string) => {
+    const response = await api.post('/config/drive-credentials/manual', { client_id, client_secret, project_id });
+    return response.data;
+  },
+
+  getDriveCredentialsStatus: async (): Promise<DriveCredentialsStatus> => {
+    const response = await api.get('/config/drive-credentials/status');
+    return response.data;
+  },
+
+  testDriveConnection: async () => {
+    const response = await api.post('/config/drive-credentials/test');
     return response.data;
   },
 };

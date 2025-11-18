@@ -60,6 +60,25 @@ const StoresPage: React.FC = () => {
       setActiveStoreId(savedStoreId);
     }
     loadStores();
+
+    // Listen for active project changes and reload stores
+    const handleProjectChange = async () => {
+      console.log('Active project changed, reloading stores...');
+      // Clear active store when project changes
+      setActiveStoreId(null);
+      localStorage.removeItem('activeStoreId');
+
+      // Small delay to ensure backend has reconfigured the client
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      loadStores();
+    };
+
+    window.addEventListener('activeProjectChanged', handleProjectChange);
+
+    return () => {
+      window.removeEventListener('activeProjectChanged', handleProjectChange);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -97,8 +116,15 @@ const StoresPage: React.FC = () => {
   };
 
   const handleSelectStore = (storeId: string) => {
+    console.log('StoresPage: handleSelectStore called with storeId:', storeId);
     setActiveStoreId(storeId);
     localStorage.setItem('activeStoreId', storeId);
+
+    // Emit event to notify DocumentsPage that active store changed
+    const event = new CustomEvent('activeStoreChanged', { detail: { storeId } });
+    console.log('StoresPage: Dispatching activeStoreChanged event with storeId:', storeId);
+    window.dispatchEvent(event);
+    console.log('StoresPage: Event dispatched successfully');
   };
 
   if (loading) {

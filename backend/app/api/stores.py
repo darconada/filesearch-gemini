@@ -1,8 +1,10 @@
 """Endpoints para gestión de stores"""
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Depends
+from sqlalchemy.orm import Session
 from typing import Optional
 from app.models.store import StoreCreate, StoreResponse, StoreList
 from app.services.store_service import store_service
+from app.database import get_db
 import logging
 
 logger = logging.getLogger(__name__)
@@ -23,10 +25,13 @@ async def create_store(store_data: StoreCreate) -> StoreResponse:
 @router.get("", response_model=StoreList)
 async def list_stores(
     page_size: int = Query(20, ge=1, le=20),
-    page_token: Optional[str] = Query(None)
+    page_token: Optional[str] = Query(None),
+    db: Session = Depends(get_db)
 ) -> StoreList:
     """Listar todos los stores"""
     try:
+        # Ensure google_client is configured with active project's API key
+        store_service.ensure_active_project_configured(db)
         return store_service.list_stores(page_size=page_size, page_token=page_token)
     except Exception as e:
         logger.error(f"Error in list_stores endpoint: {e}")

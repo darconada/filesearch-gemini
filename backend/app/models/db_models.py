@@ -14,6 +14,7 @@ class ProjectDB(Base):
     name = Column(String, nullable=False, unique=True)
     api_key = Column(String, nullable=False)  # TODO: Encrypt in production
     description = Column(String, nullable=True)
+    model_name = Column(String, nullable=True)  # Modelo Gemini a usar (null = usar default global)
     is_active = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
@@ -25,6 +26,7 @@ class DriveLinkDB(Base):
 
     id = Column(String, primary_key=True, index=True)
     drive_file_id = Column(String, nullable=False, index=True)
+    drive_file_name = Column(String, nullable=True)  # Nombre del archivo en Drive
     store_id = Column(String, nullable=False)
     document_id = Column(String, nullable=True)
     sync_mode = Column(SQLEnum(SyncMode), nullable=False)

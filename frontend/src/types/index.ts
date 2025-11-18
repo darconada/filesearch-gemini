@@ -70,6 +70,7 @@ export enum SyncMode {
 export interface DriveLink {
   id: string;
   drive_file_id: string;
+  drive_file_name?: string;
   store_id: string;
   document_id?: string;
   sync_mode: SyncMode;
@@ -87,11 +88,25 @@ export interface DriveLinkCreate {
   sync_interval_minutes?: number;
 }
 
+// Gemini Model types
+export interface GeminiModel {
+  id: string;
+  name: string;
+  description: string;
+  recommended: boolean;
+}
+
+export interface AvailableModels {
+  models: GeminiModel[];
+  default_model: string;
+}
+
 // Project types (Multi-project support)
 export interface Project {
   id: number;
   name: string;
   description?: string;
+  model_name?: string;  // Modelo específico del proyecto (null = usar default global)
   is_active: boolean;
   created_at: string;
   updated_at?: string;
@@ -102,12 +117,14 @@ export interface ProjectCreate {
   name: string;
   api_key: string;
   description?: string;
+  model_name?: string;  // Modelo a usar (null = default global)
 }
 
 export interface ProjectUpdate {
   name?: string;
   api_key?: string;
   description?: string;
+  model_name?: string;  // Modelo a usar (null = default global)
 }
 
 export interface ProjectList {
@@ -200,4 +217,22 @@ export interface IntegrationGuide {
     examples: string[];
     documentation: string;
   };
+}
+
+// Google Drive Credentials types
+export interface DriveCredentialsJSON {
+  credentials_json: string;
+}
+
+export interface DriveCredentialsManual {
+  client_id: string;
+  client_secret: string;
+  project_id?: string;
+}
+
+export interface DriveCredentialsStatus {
+  credentials_configured: boolean;
+  token_exists: boolean;
+  drive_connected: boolean;
+  error_message?: string;
 }

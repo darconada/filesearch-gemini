@@ -25,6 +25,10 @@ import {
   CircularProgress,
   Chip,
   Tooltip,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -33,8 +37,8 @@ import {
   CheckCircle as ActiveIcon,
   RadioButtonUnchecked as InactiveIcon,
 } from '@mui/icons-material';
-import { projectsApi } from '@/services/api';
-import type { Project, ProjectCreate, ProjectUpdate } from '@/types';
+import { projectsApi, configApi } from '@/services/api';
+import type { Project, ProjectCreate, ProjectUpdate, GeminiModel, AvailableModels } from '@/types';
 
 export default function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -53,11 +57,17 @@ export default function ProjectsPage() {
   const [formName, setFormName] = useState('');
   const [formApiKey, setFormApiKey] = useState('');
   const [formDescription, setFormDescription] = useState('');
+  const [formModelName, setFormModelName] = useState<string>('');
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
 
+  // Available models
+  const [availableModels, setAvailableModels] = useState<GeminiModel[]>([]);
+  const [defaultModel, setDefaultModel] = useState<string>('');
+
   useEffect(() => {
     loadProjects();
+    loadModels();
   }, []);
 
   const loadProjects = async () => {
@@ -74,10 +84,22 @@ export default function ProjectsPage() {
     }
   };
 
+  const loadModels = async () => {
+    try {
+      const data = await configApi.getModels();
+      setAvailableModels(data.models);
+      setDefaultModel(data.default_model);
+    } catch (err: any) {
+      console.error('Error loading models:', err);
+      // Non-critical error, don't show to user
+    }
+  };
+
   const handleOpenCreateDialog = () => {
     setFormName('');
     setFormApiKey('');
     setFormDescription('');
+    setFormModelName('');
     setFormErrors({});
     setCreateDialogOpen(true);
   };
@@ -87,6 +109,7 @@ export default function ProjectsPage() {
     setFormName(project.name);
     setFormApiKey('');
     setFormDescription(project.description || '');
+    setFormModelName(project.model_name || '');
     setFormErrors({});
     setEditDialogOpen(true);
   };
@@ -123,6 +146,7 @@ export default function ProjectsPage() {
         name: formName.trim(),
         api_key: formApiKey.trim(),
         description: formDescription.trim() || undefined,
+        model_name: formModelName || undefined,
       };
 
       await projectsApi.create(data);
@@ -148,6 +172,7 @@ export default function ProjectsPage() {
         name: formName.trim() !== selectedProject.name ? formName.trim() : undefined,
         api_key: formApiKey.trim() || undefined,
         description: formDescription.trim() || undefined,
+        model_name: formModelName !== selectedProject.model_name ? formModelName || undefined : undefined,
       };
 
       await projectsApi.update(selectedProject.id, data);
@@ -168,6 +193,9 @@ export default function ProjectsPage() {
       await projectsApi.activate(projectId);
       setSuccess('Project activated successfully!');
       loadProjects();
+
+      // Emit event to notify other components that active project changed
+      window.dispatchEvent(new CustomEvent('activeProjectChanged', { detail: { projectId } }));
     } catch (err: any) {
       setError(err.response?.data?.detail || err.message || 'Error activating project');
     }
@@ -246,6 +274,7 @@ export default function ProjectsPage() {
                     <TableCell>Status</TableCell>
                     <TableCell>Name</TableCell>
                     <TableCell>Description</TableCell>
+                    <TableCell>Model</TableCell>
                     <TableCell>API Key</TableCell>
                     <TableCell>Created</TableCell>
                     <TableCell align="right">Actions</TableCell>
@@ -286,6 +315,11 @@ export default function ProjectsPage() {
                       <TableCell>
                         <Typography variant="body2" color="text.secondary">
                           {project.description || '-'}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2" color="text.secondary">
+                          {project.model_name || `Default (${defaultModel})`}
                         </Typography>
                       </TableCell>
                       <TableCell>
@@ -360,7 +394,27 @@ export default function ProjectsPage() {
               value={formDescription}
               onChange={(e) => setFormDescription(e.target.value)}
               helperText="Brief description of this project"
+              sx={{ mb: 2 }}
             />
+            <FormControl fullWidth>
+              <InputLabel id="create-model-select-label">Gemini Model</InputLabel>
+              <Select
+                labelId="create-model-select-label"
+                id="create-model-select"
+                value={formModelName}
+                label="Gemini Model"
+                onChange={(e) => setFormModelName(e.target.value)}
+              >
+                <MenuItem value="">
+                  <em>Default ({defaultModel})</em>
+                </MenuItem>
+                {availableModels.map((model) => (
+                  <MenuItem key={model.id} value={model.id}>
+                    {model.name} {model.recommended && '⭐'}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           </Box>
         </DialogContent>
         <DialogActions>
@@ -402,7 +456,27 @@ export default function ProjectsPage() {
               value={formDescription}
               onChange={(e) => setFormDescription(e.target.value)}
               helperText="Brief description of this project"
+              sx={{ mb: 2 }}
             />
+            <FormControl fullWidth>
+              <InputLabel id="edit-model-select-label">Gemini Model</InputLabel>
+              <Select
+                labelId="edit-model-select-label"
+                id="edit-model-select"
+                value={formModelName}
+                label="Gemini Model"
+                onChange={(e) => setFormModelName(e.target.value)}
+              >
+                <MenuItem value="">
+                  <em>Default ({defaultModel})</em>
+                </MenuItem>
+                {availableModels.map((model) => (
+                  <MenuItem key={model.id} value={model.id}>
+                    {model.name} {model.recommended && '⭐'}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           </Box>
         </DialogContent>
         <DialogActions>

@@ -1,6 +1,8 @@
 """Servicio para gestión de File Search Stores"""
 from typing import Optional
+from sqlalchemy.orm import Session
 from app.models.store import StoreCreate, StoreResponse, StoreList
+from app.models.db_models import ProjectDB
 from app.services.google_client import google_client
 import logging
 
@@ -12,6 +14,20 @@ class StoreService:
 
     def __init__(self):
         self.google_client = google_client
+
+    def ensure_active_project_configured(self, db: Session) -> None:
+        """Ensure google_client is configured with the active project's API key"""
+        try:
+            active_project = db.query(ProjectDB).filter(ProjectDB.is_active == True).first()
+            if active_project:
+                # Always reconfigure to ensure we're using the correct API key
+                self.google_client.configure(active_project.api_key)
+                logger.info(f"Google client ensured configured with active project: {active_project.name} (ID: {active_project.id})")
+            else:
+                logger.warning("No active project found when listing stores")
+        except Exception as e:
+            logger.error(f"Error ensuring active project configured: {e}")
+            # Don't raise, let it use whatever is configured
 
     def create_store(self, store_data: StoreCreate) -> StoreResponse:
         """Crear un nuevo File Search store"""
@@ -42,6 +58,7 @@ class StoreService:
         """Listar stores disponibles"""
         try:
             client = self.google_client.get_client()
+            logger.info(f"Listing stores with client configured: {self.google_client.is_configured()}")
 
             # Listar stores usando el nuevo SDK (sintaxis correcta)
             # IMPORTANTE: pageSize en camelCase, dentro de config dict
@@ -111,8 +128,8 @@ class StoreService:
         try:
             client = self.google_client.get_client()
 
-            # Eliminar con force=True para borrar todos los documentos
-            client.file_search_stores.delete(name=store_id, force=True)
+            # Eliminar el store (el nuevo SDK no acepta parámetro force)
+            client.file_search_stores.delete(name=store_id)
 
             logger.info(f"Store deleted: {store_id}")
 

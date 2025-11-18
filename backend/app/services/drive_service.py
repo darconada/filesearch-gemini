@@ -11,7 +11,7 @@ from app.models.db_models import DriveLinkDB
 from app.services.drive_client import drive_client
 from app.services.document_service import document_service
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 
 logger = logging.getLogger(__name__)
@@ -29,6 +29,7 @@ class DriveService:
         return DriveLinkResponse(
             id=db_link.id,
             drive_file_id=db_link.drive_file_id,
+            drive_file_name=db_link.drive_file_name,
             store_id=db_link.store_id,
             document_id=db_link.document_id,
             sync_mode=db_link.sync_mode,
@@ -128,14 +129,19 @@ class DriveService:
             file_name = file_metadata.get('name', 'untitled')
 
             # 2. Verificar si necesitamos sincronizar
+            # Asegurar que drive_last_modified_at tenga timezone (fix para SQLite)
+            last_modified = link.drive_last_modified_at
+            if last_modified and last_modified.tzinfo is None:
+                last_modified = last_modified.replace(tzinfo=timezone.utc)
+
             needs_sync = force or \
-                        link.drive_last_modified_at is None or \
-                        drive_modified_time > link.drive_last_modified_at
+                        last_modified is None or \
+                        drive_modified_time > last_modified
 
             if not needs_sync:
                 logger.info(f"File {link.drive_file_id} not modified, skipping sync")
                 link.status = "synced"
-                link.last_synced_at = datetime.utcnow()
+                link.last_synced_at = datetime.now(timezone.utc)
                 db.commit()
                 return self._db_to_response(link)
 
@@ -170,7 +176,8 @@ class DriveService:
 
             # 6. Actualizar el vínculo
             link.document_id = document.name
-            link.last_synced_at = datetime.utcnow()
+            link.drive_file_name = file_name
+            link.last_synced_at = datetime.now(timezone.utc)
             link.drive_last_modified_at = drive_modified_time
             link.status = "synced"
             link.error_message = None
