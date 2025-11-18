@@ -114,6 +114,9 @@ const StoresPage: React.FC = () => {
   const handleSelectStore = (storeId: string) => {
     setActiveStoreId(storeId);
     localStorage.setItem('activeStoreId', storeId);
+
+    // Emit event to notify DocumentsPage that active store changed
+    window.dispatchEvent(new CustomEvent('activeStoreChanged', { detail: { storeId } }));
   };
 
   if (loading) {

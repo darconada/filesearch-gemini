@@ -58,19 +58,30 @@ const DocumentsPage: React.FC = () => {
       loadDocuments(storeId);
     }
 
-    // Listen for active project changes and reload documents
+    // Listen for active project changes and clear documents
     const handleProjectChange = () => {
-      console.log('Active project changed, reloading documents...');
-      const currentStoreId = localStorage.getItem('activeStoreId');
-      if (currentStoreId) {
-        loadDocuments(currentStoreId);
-      }
+      console.log('Active project changed, clearing documents...');
+      // Clear documents and active store when project changes
+      setDocuments([]);
+      setActiveStoreId(null);
+      setError(null);
+      // The activeStoreId will be cleared by StoresPage, so we don't try to reload
+    };
+
+    // Listen for active store changes and reload documents
+    const handleStoreChange = (event: any) => {
+      const { storeId } = event.detail;
+      console.log('Active store changed, reloading documents for store:', storeId);
+      setActiveStoreId(storeId);
+      loadDocuments(storeId);
     };
 
     window.addEventListener('activeProjectChanged', handleProjectChange);
+    window.addEventListener('activeStoreChanged', handleStoreChange);
 
     return () => {
       window.removeEventListener('activeProjectChanged', handleProjectChange);
+      window.removeEventListener('activeStoreChanged', handleStoreChange);
     };
   }, []);
 
