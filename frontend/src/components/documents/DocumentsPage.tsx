@@ -52,10 +52,9 @@ const DocumentsPage: React.FC = () => {
   const [activeStoreId, setActiveStoreId] = useState<string | null>(null);
 
   useEffect(() => {
-    // Don't auto-load from localStorage - only load when user explicitly selects a store
-    // This prevents loading documents from a previous project's store with wrong API key
-    const storeId = localStorage.getItem('activeStoreId');
-    setActiveStoreId(storeId);
+    // Don't read activeStoreId from localStorage on mount
+    // Only show a store when user explicitly selects it via activeStoreChanged event
+    // This prevents showing stores from previous projects
 
     // Listen for active project changes and clear documents
     const handleProjectChange = () => {
