@@ -42,6 +42,7 @@ class StoreService:
         """Listar stores disponibles"""
         try:
             client = self.google_client.get_client()
+            logger.info(f"Listing stores with client configured: {self.google_client.is_configured()}")
 
             # Listar stores usando el nuevo SDK (sintaxis correcta)
             # IMPORTANTE: pageSize en camelCase, dentro de config dict

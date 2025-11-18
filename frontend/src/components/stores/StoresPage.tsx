@@ -62,11 +62,15 @@ const StoresPage: React.FC = () => {
     loadStores();
 
     // Listen for active project changes and reload stores
-    const handleProjectChange = () => {
+    const handleProjectChange = async () => {
       console.log('Active project changed, reloading stores...');
       // Clear active store when project changes
       setActiveStoreId(null);
       localStorage.removeItem('activeStoreId');
+
+      // Small delay to ensure backend has reconfigured the client
+      await new Promise(resolve => setTimeout(resolve, 500));
+
       loadStores();
     };
 
