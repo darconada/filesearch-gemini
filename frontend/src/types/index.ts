@@ -87,11 +87,25 @@ export interface DriveLinkCreate {
   sync_interval_minutes?: number;
 }
 
+// Gemini Model types
+export interface GeminiModel {
+  id: string;
+  name: string;
+  description: string;
+  recommended: boolean;
+}
+
+export interface AvailableModels {
+  models: GeminiModel[];
+  default_model: string;
+}
+
 // Project types (Multi-project support)
 export interface Project {
   id: number;
   name: string;
   description?: string;
+  model_name?: string;  // Modelo específico del proyecto (null = usar default global)
   is_active: boolean;
   created_at: string;
   updated_at?: string;
@@ -102,12 +116,14 @@ export interface ProjectCreate {
   name: string;
   api_key: string;
   description?: string;
+  model_name?: string;  // Modelo a usar (null = default global)
 }
 
 export interface ProjectUpdate {
   name?: string;
   api_key?: string;
   description?: string;
+  model_name?: string;  // Modelo a usar (null = default global)
 }
 
 export interface ProjectList {

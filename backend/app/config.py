@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 from typing import Optional
 from dotenv import load_dotenv, set_key
+from app.constants import DEFAULT_MODEL
 
 # Cargar variables de entorno
 env_path = Path(__file__).parent.parent / ".env"
@@ -15,7 +16,7 @@ class Settings:
     def __init__(self):
         self.env_path = env_path
         self.api_key: Optional[str] = os.getenv("GOOGLE_API_KEY")
-        self.model_name: str = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+        self.model_name: str = os.getenv("GEMINI_MODEL", DEFAULT_MODEL)
         self.host: str = os.getenv("HOST", "0.0.0.0")
         self.port: int = int(os.getenv("PORT", "8000"))
         self.cors_origins: list[str] = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://localhost:3000").split(",")

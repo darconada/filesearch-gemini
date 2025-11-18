@@ -3,6 +3,7 @@ from fastapi import APIRouter, HTTPException
 from app.models.config import ConfigApiKey, ConfigStatus
 from app.config import settings
 from app.services.google_client import google_client
+from app.constants import AVAILABLE_MODELS, DEFAULT_MODEL
 import logging
 
 logger = logging.getLogger(__name__)
@@ -76,3 +77,12 @@ async def get_config_status() -> ConfigStatus:
             api_key_valid=False,
             error_message=str(e)
         )
+
+
+@router.get("/models")
+async def get_available_models() -> dict:
+    """Obtener lista de modelos Gemini disponibles"""
+    return {
+        "models": AVAILABLE_MODELS,
+        "default_model": DEFAULT_MODEL
+    }

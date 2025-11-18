@@ -3,6 +3,8 @@ from typing import Optional, List
 from app.models.query import QueryRequest, QueryResponse, DocumentSource
 from app.services.google_client import google_client
 from app.config import settings
+from app.database import SessionLocal
+from app.models.db_models import ProjectDB
 import logging
 
 logger = logging.getLogger(__name__)
@@ -13,6 +15,20 @@ class QueryService:
 
     def __init__(self):
         self.google_client = google_client
+
+    def _get_model_to_use(self) -> str:
+        """Obtener el modelo a usar: del proyecto activo o el default global"""
+        db = SessionLocal()
+        try:
+            active_project = db.query(ProjectDB).filter(ProjectDB.is_active == True).first()
+            if active_project and active_project.model_name:
+                logger.info(f"Using model from active project: {active_project.model_name}")
+                return active_project.model_name
+            else:
+                logger.info(f"Using default global model: {settings.model_name}")
+                return settings.model_name
+        finally:
+            db.close()
 
     def execute_query(self, query: QueryRequest) -> QueryResponse:
         """Ejecutar una consulta RAG usando File Search"""
@@ -38,9 +54,12 @@ class QueryService:
                 tools=[file_search_tool]
             )
 
+            # Obtener el modelo a usar (del proyecto activo o default global)
+            model_to_use = self._get_model_to_use()
+
             # Ejecutar generateContent con el nuevo SDK
             response = client.models.generate_content(
-                model=settings.model_name,
+                model=model_to_use,
                 contents=query.question,
                 config=config
             )
@@ -94,7 +113,7 @@ class QueryService:
             return QueryResponse(
                 answer=answer_text,
                 sources=sources,
-                model_used=settings.model_name
+                model_used=model_to_use
             )
 
         except Exception as e:

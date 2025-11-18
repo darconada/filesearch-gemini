@@ -9,6 +9,7 @@ class ProjectCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=100, description="Nombre del proyecto")
     api_key: str = Field(..., min_length=1, description="Google API Key del proyecto")
     description: Optional[str] = Field(None, max_length=500, description="Descripción opcional")
+    model_name: Optional[str] = Field(None, description="Modelo Gemini a usar (null = usar default global)")
 
 
 class ProjectUpdate(BaseModel):
@@ -16,6 +17,7 @@ class ProjectUpdate(BaseModel):
     name: Optional[str] = Field(None, min_length=1, max_length=100)
     api_key: Optional[str] = Field(None, min_length=1)
     description: Optional[str] = Field(None, max_length=500)
+    model_name: Optional[str] = Field(None, description="Modelo Gemini a usar")
 
 
 class Project(BaseModel):
@@ -23,6 +25,7 @@ class Project(BaseModel):
     id: int
     name: str
     description: Optional[str]
+    model_name: Optional[str]  # Modelo específico del proyecto (null = usar default global)
     is_active: bool
     created_at: datetime
     updated_at: Optional[datetime]
