@@ -37,7 +37,9 @@ class DriveService:
             last_synced_at=db_link.last_synced_at,
             drive_last_modified_at=db_link.drive_last_modified_at,
             status=db_link.status,
-            error_message=db_link.error_message
+            error_message=db_link.error_message,
+            version=db_link.version,
+            original_file_id=db_link.original_file_id
         )
 
     def create_link(self, link_data: DriveLinkCreate, db: Session) -> DriveLinkResponse:

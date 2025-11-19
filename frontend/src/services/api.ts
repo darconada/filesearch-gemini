@@ -24,6 +24,11 @@ import type {
   ProjectList,
   AvailableModels,
   DriveCredentialsStatus,
+  LocalFileLink,
+  LocalFileLinkCreate,
+  LocalFileLinkList,
+  FileReplaceResponse,
+  FileVersionHistory,
 } from '@/types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
@@ -305,6 +310,61 @@ export const projectsApi = {
 
   delete: async (projectId: number) => {
     const response = await api.delete(`/projects/${projectId}`);
+    return response.data;
+  },
+};
+
+// Local Files API
+export const localFilesApi = {
+  list: async (storeId?: string): Promise<LocalFileLinkList> => {
+    const params = storeId ? { store_id: storeId } : {};
+    const response = await api.get('/local-files/links', { params });
+    return response.data;
+  },
+
+  create: async (data: LocalFileLinkCreate): Promise<LocalFileLink> => {
+    const response = await api.post('/local-files/links', data);
+    return response.data;
+  },
+
+  get: async (linkId: string): Promise<LocalFileLink> => {
+    const response = await api.get(`/local-files/links/${linkId}`);
+    return response.data;
+  },
+
+  delete: async (linkId: string, deleteFromStore = false) => {
+    const response = await api.delete(`/local-files/links/${linkId}`, {
+      params: { delete_from_store: deleteFromStore }
+    });
+    return response.data;
+  },
+
+  sync: async (linkId: string, force = false): Promise<LocalFileLink> => {
+    const response = await api.post(`/local-files/links/${linkId}/sync`, { force });
+    return response.data;
+  },
+
+  syncAll: async (storeId?: string): Promise<LocalFileLinkList> => {
+    const params = storeId ? { store_id: storeId } : {};
+    const response = await api.post('/local-files/sync-all', null, { params });
+    return response.data;
+  },
+};
+
+// File Updates API
+export const fileUpdatesApi = {
+  replace: async (linkId: string, file: File): Promise<FileReplaceResponse> => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await api.post(`/file-updates/replace/${linkId}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+
+  getHistory: async (linkId: string): Promise<FileVersionHistory> => {
+    const response = await api.get(`/file-updates/history/${linkId}`);
     return response.data;
   },
 };

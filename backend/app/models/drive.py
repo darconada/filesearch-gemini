@@ -33,6 +33,10 @@ class DriveLinkResponse(BaseModel):
     status: str = Field("not_synced", description="Estado: not_synced, synced, syncing, error")
     error_message: Optional[str] = None
 
+    # Versioning fields
+    version: int = Field(1, description="Versión del archivo")
+    original_file_id: Optional[str] = Field(None, description="ID original del archivo")
+
 
 class DriveLinkList(BaseModel):
     """Lista de vínculos Drive"""

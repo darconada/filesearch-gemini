@@ -79,6 +79,8 @@ export interface DriveLink {
   drive_last_modified_at?: string;
   status: string;
   error_message?: string;
+  version: number;
+  original_file_id?: string;
 }
 
 export interface DriveLinkCreate {
@@ -235,4 +237,56 @@ export interface DriveCredentialsStatus {
   token_exists: boolean;
   drive_connected: boolean;
   error_message?: string;
+}
+
+// Local File Link types
+export interface LocalFileLink {
+  id: string;
+  local_file_path: string;
+  file_name: string;
+  store_id: string;
+  document_id?: string;
+  file_size?: number;
+  file_hash?: string;
+  last_modified_at?: string;
+  mime_type?: string;
+  last_synced_at?: string;
+  status: string;
+  error_message?: string;
+  version: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface LocalFileLinkCreate {
+  local_file_path: string;
+  store_id: string;
+}
+
+export interface LocalFileLinkList {
+  links: LocalFileLink[];
+}
+
+// File Update types
+export interface FileReplaceResponse {
+  success: boolean;
+  link_id: string;
+  new_version: number;
+  new_document_id: string;
+  old_document_id?: string;
+  message: string;
+}
+
+export interface FileVersionHistory {
+  link_id: string;
+  file_name: string;
+  current_version: number;
+  current_document_id: string;
+  previous_versions: Array<{
+    document_id: string;
+    version: number;
+    replaced_at: string;
+  }>;
+  created_at?: string;
+  updated_at?: string;
 }

@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from app.config import settings
-from app.api import config, stores, documents, query, drive, mcp_config, projects
+from app.api import config, stores, documents, query, drive, mcp_config, projects, local_files, file_updates
 from app.database import init_db, SessionLocal
 from app.scheduler import start_scheduler, stop_scheduler
 from app.models.db_models import ProjectDB
@@ -98,6 +98,8 @@ app.include_router(documents.router)  # Primero las rutas más específicas
 app.include_router(stores.router)     # Después las rutas con :path
 app.include_router(query.router)
 app.include_router(drive.router)
+app.include_router(local_files.router)  # Local file sync
+app.include_router(file_updates.router)  # File updates/replace
 app.include_router(mcp_config.router)  # MCP y CLI configuration
 
 
