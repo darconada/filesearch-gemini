@@ -31,10 +31,10 @@ import {
   FormControlLabel,
   Switch,
 } from '@mui/material';
-import { Add, Delete, Sync } from '@mui/icons-material';
+import { Add, Delete, Sync, Upload, History } from '@mui/icons-material';
 import { Tooltip } from '@mui/material';
-import { driveApi, storesApi } from '@/services/api';
-import type { DriveLink, Store } from '@/types';
+import { driveApi, storesApi, fileUpdatesApi } from '@/services/api';
+import type { DriveLink, Store, FileVersionHistory } from '@/types';
 import { SyncMode } from '@/types';
 
 const DrivePage: React.FC = () => {
@@ -42,8 +42,13 @@ const DrivePage: React.FC = () => {
   const [stores, setStores] = useState<Store[]>([]);
   const [loading, setLoading] = useState(false);
   const [openCreate, setOpenCreate] = useState(false);
+  const [openReplace, setOpenReplace] = useState(false);
+  const [openHistory, setOpenHistory] = useState(false);
   const [driveFileId, setDriveFileId] = useState('');
   const [selectedStoreId, setSelectedStoreId] = useState('');
+  const [selectedLinkId, setSelectedLinkId] = useState('');
+  const [replaceFile, setReplaceFile] = useState<File | null>(null);
+  const [versionHistory, setVersionHistory] = useState<FileVersionHistory | null>(null);
   const [syncMode, setSyncMode] = useState<SyncMode>(SyncMode.MANUAL);
   const [syncInterval, setSyncInterval] = useState('60');
   const [creating, setCreating] = useState(false);
@@ -128,6 +133,35 @@ const DrivePage: React.FC = () => {
     }
   };
 
+  const handleReplace = async () => {
+    if (!replaceFile || !selectedLinkId) return;
+
+    setCreating(true);
+    setError(null);
+
+    try {
+      await fileUpdatesApi.replace(selectedLinkId, replaceFile);
+      setOpenReplace(false);
+      setReplaceFile(null);
+      setSelectedLinkId('');
+      await loadData();
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Error replacing file');
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const handleShowHistory = async (linkId: string) => {
+    try {
+      const history = await fileUpdatesApi.getHistory(linkId);
+      setVersionHistory(history);
+      setOpenHistory(true);
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Error loading history');
+    }
+  };
+
   const getStoreDisplayName = (storeId: string) => {
     const store = stores.find((s) => s.name === storeId);
     return store ? store.display_name : storeId;
@@ -171,6 +205,7 @@ const DrivePage: React.FC = () => {
                 <TableCell>Drive File</TableCell>
                 <TableCell>Store</TableCell>
                 <TableCell>Mode</TableCell>
+                <TableCell>Version</TableCell>
                 <TableCell>Status</TableCell>
                 <TableCell>Last Synced</TableCell>
                 <TableCell>Actions</TableCell>
@@ -206,6 +241,9 @@ const DrivePage: React.FC = () => {
                     )}
                   </TableCell>
                   <TableCell>
+                    <Chip label={`v${link.version}`} size="small" color="primary" />
+                  </TableCell>
+                  <TableCell>
                     <Chip
                       label={link.status}
                       size="small"
@@ -218,8 +256,25 @@ const DrivePage: React.FC = () => {
                       : 'Never'}
                   </TableCell>
                   <TableCell>
-                    <IconButton size="small" onClick={() => handleSync(link.id)}>
+                    <IconButton size="small" onClick={() => handleSync(link.id)} title="Sync Now">
                       <Sync />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={() => {
+                        setSelectedLinkId(link.id);
+                        setOpenReplace(true);
+                      }}
+                      title="Replace File"
+                    >
+                      <Upload />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={() => handleShowHistory(link.id)}
+                      title="Version History"
+                    >
+                      <History />
                     </IconButton>
                     <IconButton size="small" color="error" onClick={() => handleDelete(link.id)}>
                       <Delete />
@@ -296,6 +351,85 @@ const DrivePage: React.FC = () => {
           >
             {creating ? <CircularProgress size={24} /> : 'Create'}
           </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Replace File Dialog */}
+      <Dialog open={openReplace} onClose={() => setOpenReplace(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Replace File</DialogTitle>
+        <DialogContent>
+          <Alert severity="warning" sx={{ mb: 2, mt: 1 }}>
+            This will replace the current file in File Search. The old version will be saved in history.
+          </Alert>
+          <Button variant="outlined" component="label" fullWidth>
+            Choose New File
+            <input
+              type="file"
+              hidden
+              onChange={(e) => setReplaceFile(e.target.files?.[0] || null)}
+            />
+          </Button>
+          {replaceFile && (
+            <Typography variant="body2" sx={{ mt: 1 }}>
+              Selected: {replaceFile.name}
+            </Typography>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenReplace(false)}>Cancel</Button>
+          <Button
+            onClick={handleReplace}
+            variant="contained"
+            disabled={creating || !replaceFile}
+            color="warning"
+          >
+            {creating ? <CircularProgress size={24} /> : 'Replace'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Version History Dialog */}
+      <Dialog open={openHistory} onClose={() => setOpenHistory(false)} maxWidth="md" fullWidth>
+        <DialogTitle>Version History: {versionHistory?.file_name}</DialogTitle>
+        <DialogContent>
+          <Typography variant="subtitle2" gutterBottom sx={{ mt: 1 }}>
+            Current Version: v{versionHistory?.current_version}
+          </Typography>
+          <Typography variant="caption" display="block" gutterBottom>
+            Document ID: {versionHistory?.current_document_id}
+          </Typography>
+
+          {versionHistory && versionHistory.previous_versions.length > 0 ? (
+            <TableContainer component={Paper} sx={{ mt: 2 }}>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Version</TableCell>
+                    <TableCell>Document ID</TableCell>
+                    <TableCell>Replaced At</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {versionHistory.previous_versions.map((version, idx) => (
+                    <TableRow key={idx}>
+                      <TableCell>v{version.version}</TableCell>
+                      <TableCell sx={{ fontFamily: 'monospace', fontSize: '0.75rem' }}>
+                        {version.document_id}
+                      </TableCell>
+                      <TableCell>{new Date(version.replaced_at).toLocaleString()}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          ) : (
+            <Typography color="text.secondary" sx={{ mt: 2 }}>
+              No previous versions
+            </Typography>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenHistory(false)}>Close</Button>
         </DialogActions>
       </Dialog>
     </Box>
