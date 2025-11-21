@@ -77,17 +77,30 @@ class DocumentService:
         # Si es una lista (formato correcto de Google)
         if isinstance(google_metadata, list):
             for item in google_metadata:
-                if not isinstance(item, dict):
-                    continue
+                # Manejar tanto dicts como objetos Pydantic
+                key = None
+                numeric_value = None
+                string_value = None
                 
-                key = item.get('key')
+                if isinstance(item, dict):
+                    key = item.get('key')
+                    if 'numeric_value' in item:
+                        numeric_value = item['numeric_value']
+                    elif 'string_value' in item:
+                        string_value = item['string_value']
+                else:
+                    # Asumir que es un objeto (CustomMetadata)
+                    key = getattr(item, 'key', None)
+                    numeric_value = getattr(item, 'numeric_value', None)
+                    string_value = getattr(item, 'string_value', None)
+                
                 if not key:
                     continue
                 
-                if 'numeric_value' in item:
-                    metadata[key] = item['numeric_value']
-                elif 'string_value' in item:
-                    metadata[key] = item['string_value']
+                if numeric_value is not None:
+                    metadata[key] = numeric_value
+                elif string_value is not None:
+                    metadata[key] = string_value
         
         # Si es un dict (formato antiguo, para retrocompatibilidad)
         elif isinstance(google_metadata, dict):
@@ -135,26 +148,56 @@ class DocumentService:
                 
                 # Construir configuración de upload
                 upload_config = {}
+                google_metadata = None
                 
                 # Añadir metadata personalizada si se proporciona
                 if metadata:
                     google_metadata = self._convert_metadata_to_google_format(metadata)
                     if google_metadata:
-                        upload_config['customMetadata'] = google_metadata
                         logger.info(f"Uploading with {len(google_metadata)} metadata fields")
+                        logger.debug(f"Original metadata: {metadata}")
+                        logger.debug(f"Google metadata format: {google_metadata}")
                 
-                # Llamar al SDK con o sin configuración
-                if upload_config:
-                    operation = client.file_search_stores.upload_to_file_search_store(
-                        file=tmp_path,
-                        file_search_store_name=store_id,
-                        config=upload_config
-                    )
-                else:
-                    operation = client.file_search_stores.upload_to_file_search_store(
-                        file=tmp_path,
-                        file_search_store_name=store_id
-                    )
+                # Intentar pasar metadata directamente como parámetro
+                # Según la documentación, custom_metadata puede ser un parámetro directo
+                try:
+                    if google_metadata:
+                        logger.info("Attempting upload with custom_metadata parameter...")
+                        operation = client.file_search_stores.upload_to_file_search_store(
+                            file=tmp_path,
+                            file_search_store_name=store_id,
+                            custom_metadata=google_metadata
+                        )
+                    else:
+                        logger.info("Uploading without metadata...")
+                        operation = client.file_search_stores.upload_to_file_search_store(
+                            file=tmp_path,
+                            file_search_store_name=store_id
+                        )
+                except TypeError as te:
+                    # Si falla, intentar con config usando snake_case (estándar en Python SDK)
+                    logger.warning(f"custom_metadata parameter failed: {te}, trying config approach...")
+                    
+                    # INTENTO 1: custom_metadata (snake_case)
+                    upload_config['custom_metadata'] = google_metadata
+                    logger.debug(f"Upload config (snake_case): {upload_config}")
+                    
+                    try:
+                        operation = client.file_search_stores.upload_to_file_search_store(
+                            file=tmp_path,
+                            file_search_store_name=store_id,
+                            config=upload_config
+                        )
+                    except Exception as e_config:
+                        logger.warning(f"Config with custom_metadata failed: {e_config}")
+                        # INTENTO 2: metadata (algunas versiones usan este nombre)
+                        upload_config = {'metadata': google_metadata}
+                        logger.debug(f"Retrying with config 'metadata': {upload_config}")
+                        operation = client.file_search_stores.upload_to_file_search_store(
+                            file=tmp_path,
+                            file_search_store_name=store_id,
+                            config=upload_config
+                        )
 
                 # Esperar a que se complete la operación (es asíncrona)
                 import time
@@ -250,6 +293,14 @@ class DocumentService:
 
             # Iterar sobre el pager
             for doc in pager.page:
+                # Debug logging para investigar problema de metadata
+                if hasattr(doc, 'custom_metadata') and doc.custom_metadata:
+                    logger.info(f"Document {doc.display_name} has metadata: {doc.custom_metadata}")
+                else:
+                    logger.debug(f"Document {doc.display_name} has NO metadata in SDK object")
+                    # Intentar ver si está en otro atributo o diccionario interno
+                    logger.debug(f"Doc dir: {dir(doc)}")
+                
                 documents.append(DocumentResponse(
                     name=doc.name,
                     display_name=doc.display_name or "Untitled",
