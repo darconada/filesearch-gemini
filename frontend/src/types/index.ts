@@ -290,3 +290,20 @@ export interface FileVersionHistory {
   created_at?: string;
   updated_at?: string;
 }
+
+// File Browser types
+export interface FileSystemItem {
+  name: string;
+  path: string;
+  is_directory: boolean;
+  size?: number;
+  modified_time?: string;
+  mime_type?: string;
+  is_readable: boolean;
+}
+
+export interface DirectoryListing {
+  current_path: string;
+  parent_path?: string;
+  items: FileSystemItem[];
+}

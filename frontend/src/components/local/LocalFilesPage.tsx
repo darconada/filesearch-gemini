@@ -27,9 +27,10 @@ import {
   Select,
   MenuItem,
 } from '@mui/material';
-import { Add, Delete, Sync, Upload, History } from '@mui/icons-material';
+import { Add, Delete, Sync, Upload, History, FolderOpen } from '@mui/icons-material';
 import { localFilesApi, storesApi, fileUpdatesApi } from '@/services/api';
 import type { LocalFileLink, Store, FileVersionHistory } from '@/types';
+import FileBrowserDialog from './FileBrowserDialog';
 
 const LocalFilesPage: React.FC = () => {
   const [links, setLinks] = useState<LocalFileLink[]>([]);
@@ -45,6 +46,7 @@ const LocalFilesPage: React.FC = () => {
   const [versionHistory, setVersionHistory] = useState<FileVersionHistory | null>(null);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [openFileBrowser, setOpenFileBrowser] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -141,6 +143,11 @@ const LocalFilesPage: React.FC = () => {
   const getStoreDisplayName = (storeId: string) => {
     const store = stores.find((s) => s.name === storeId);
     return store ? store.display_name : storeId;
+  };
+
+  const handleFileBrowserSelect = (path: string) => {
+    setFilePath(path);
+    setOpenFileBrowser(false);
   };
 
   const formatFileSize = (bytes?: number) => {
@@ -251,19 +258,28 @@ const LocalFilesPage: React.FC = () => {
         </TableContainer>
       )}
 
-      {/* Create Dialog */}
       <Dialog open={openCreate} onClose={() => setOpenCreate(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Add Local File</DialogTitle>
         <DialogContent>
-          <TextField
-            fullWidth
-            label="File Path (absolute)"
-            value={filePath}
-            onChange={(e) => setFilePath(e.target.value)}
-            placeholder="/home/user/documents/file.pdf"
-            margin="normal"
-            helperText="Enter the absolute path to the local file"
-          />
+          <Box display="flex" gap={1} alignItems="flex-start">
+            <TextField
+              fullWidth
+              label="File Path (absolute)"
+              value={filePath}
+              onChange={(e) => setFilePath(e.target.value)}
+              placeholder="/home/user/documents/file.pdf"
+              margin="normal"
+              helperText="Enter the absolute path to the local file"
+            />
+            <Button
+              variant="outlined"
+              startIcon={<FolderOpen />}
+              onClick={() => setOpenFileBrowser(true)}
+              sx={{ mt: 2, minWidth: 'auto' }}
+            >
+              Browse
+            </Button>
+          </Box>
           <FormControl fullWidth margin="normal">
             <InputLabel>Target Store</InputLabel>
             <Select
@@ -369,6 +385,14 @@ const LocalFilesPage: React.FC = () => {
           <Button onClick={() => setOpenHistory(false)}>Close</Button>
         </DialogActions>
       </Dialog>
+
+      {/* File Browser Dialog */}
+      <FileBrowserDialog
+        open={openFileBrowser}
+        onClose={() => setOpenFileBrowser(false)}
+        onSelect={handleFileBrowserSelect}
+        title="Browse Server Files"
+      />
     </Box>
   );
 };

@@ -29,6 +29,8 @@ import type {
   LocalFileLinkList,
   FileReplaceResponse,
   FileVersionHistory,
+  DirectoryListing,
+  FileSystemItem,
 } from '@/types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
@@ -365,6 +367,20 @@ export const fileUpdatesApi = {
 
   getHistory: async (linkId: string): Promise<FileVersionHistory> => {
     const response = await api.get(`/file-updates/history/${linkId}`);
+    return response.data;
+  },
+};
+
+// File Browser API
+export const fileBrowserApi = {
+  listDirectory: async (path?: string): Promise<DirectoryListing> => {
+    const params = path ? { path } : {};
+    const response = await api.get('/file-browser/list', { params });
+    return response.data;
+  },
+
+  getFileInfo: async (path: string): Promise<FileSystemItem> => {
+    const response = await api.get('/file-browser/file-info', { params: { path } });
     return response.data;
   },
 };

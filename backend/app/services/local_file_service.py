@@ -226,11 +226,7 @@ class LocalFileService:
 
             logger.info(f"File {file_path} modified or force sync, uploading...")
 
-            # 5. Leer contenido del archivo
-            with open(file_path, "rb") as f:
-                file_content = f.read()
-
-            # 6. Si existe document_id previo, eliminarlo (replace)
+            # 5. Si existe document_id previo, eliminarlo (replace)
             if link.document_id:
                 try:
                     logger.info(f"Deleting old document {link.document_id}")
@@ -238,20 +234,22 @@ class LocalFileService:
                 except Exception as e:
                     logger.warning(f"Could not delete old document: {e}")
 
-            # 7. Subir nuevo documento al store
+            # 6. Subir nuevo documento al store
+            # Abrir el archivo y pasar el file object (BinaryIO) directamente
             logger.info(f"Uploading document to store {link.store_id}")
-            document = self.document_service.upload_document(
-                store_id=link.store_id,
-                file_content=file_content,
-                filename=link.file_name,
-                display_name=link.file_name,
-                metadata={
-                    "local_file_path": str(file_path),
-                    "synced_from": "local_filesystem",
-                    "file_hash": current_hash,
-                    "last_modified": current_metadata["modified_time"].isoformat()
-                }
-            )
+            with open(file_path, "rb") as file_obj:
+                document = self.document_service.upload_document(
+                    store_id=link.store_id,
+                    file_content=file_obj,
+                    filename=link.file_name,
+                    display_name=link.file_name,
+                    metadata={
+                        "local_file_path": str(file_path),
+                        "synced_from": "local_filesystem",
+                        "file_hash": current_hash,
+                        "last_modified": current_metadata["modified_time"].isoformat()
+                    }
+                )
 
             # 8. Actualizar el vínculo
             link.document_id = document.name
