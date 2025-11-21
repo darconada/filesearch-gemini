@@ -15,33 +15,103 @@ class DocumentService:
     def __init__(self):
         self.google_client = google_client
 
-    def _convert_metadata_to_google_format(self, metadata: Dict[str, Any]) -> Dict[str, Any]:
-        """Convertir metadata de formato simple a formato Google"""
-        google_metadata = {}
-
+    def _convert_metadata_to_google_format(self, metadata: Dict[str, Any]) -> list:
+        """
+        Convertir metadata de formato simple a formato Google
+        
+        Google File Search espera metadata como lista de objetos:
+        [
+            {'key': 'campo', 'string_value': 'valor'},
+            {'key': 'numero', 'numeric_value': 123.0}
+        ]
+        
+        Restricciones de las keys:
+        - Solo minúsculas, números, guiones bajos y guiones
+        - Deben empezar con letra minúscula
+        - Máximo 63 caracteres
+        """
+        google_metadata = []
+        
         for key, value in metadata.items():
+            # Sanitizar la key: convertir a minúsculas, reemplazar espacios por guiones bajos
+            # y eliminar caracteres no permitidos
+            sanitized_key = key.lower().replace(' ', '_').replace('-', '_')
+            # Mantener solo letras, números y guiones bajos
+            sanitized_key = ''.join(c for c in sanitized_key if c.isalnum() or c == '_')
+            
+            # Verificar que empiece con letra
+            if not sanitized_key or not sanitized_key[0].isalpha():
+                logger.warning(f"Skipping metadata key '{key}': must start with a letter")
+                continue
+            
+            # Limitar longitud
+            sanitized_key = sanitized_key[:63]
+            
+            # Crear el objeto de metadata
             if isinstance(value, (int, float)):
-                google_metadata[key] = {"numeric_value": float(value)}
+                google_metadata.append({
+                    'key': sanitized_key,
+                    'numeric_value': float(value)
+                })
             else:
-                google_metadata[key] = {"string_value": str(value)}
-
+                # Limitar valor a 63 caracteres
+                string_value = str(value)[:63]
+                google_metadata.append({
+                    'key': sanitized_key,
+                    'string_value': string_value
+                })
+        
         return google_metadata
 
     def _convert_metadata_from_google_format(self, google_metadata) -> Dict[str, Any]:
-        """Convertir metadata de formato Google a formato simple"""
+        """
+        Convertir metadata de formato Google a formato simple
+        
+        Maneja tanto el formato antiguo (dict) como el nuevo (list)
+        """
         metadata = {}
 
         if not google_metadata:
             return metadata
-
-        for key, value_obj in google_metadata.items():
-            if isinstance(value_obj, dict):
-                if "numeric_value" in value_obj:
-                    metadata[key] = value_obj["numeric_value"]
-                elif "string_value" in value_obj:
-                    metadata[key] = value_obj["string_value"]
-            else:
-                metadata[key] = value_obj
+        
+        # Si es una lista (formato correcto de Google)
+        if isinstance(google_metadata, list):
+            for item in google_metadata:
+                # Manejar tanto dicts como objetos Pydantic
+                key = None
+                numeric_value = None
+                string_value = None
+                
+                if isinstance(item, dict):
+                    key = item.get('key')
+                    if 'numeric_value' in item:
+                        numeric_value = item['numeric_value']
+                    elif 'string_value' in item:
+                        string_value = item['string_value']
+                else:
+                    # Asumir que es un objeto (CustomMetadata)
+                    key = getattr(item, 'key', None)
+                    numeric_value = getattr(item, 'numeric_value', None)
+                    string_value = getattr(item, 'string_value', None)
+                
+                if not key:
+                    continue
+                
+                if numeric_value is not None:
+                    metadata[key] = numeric_value
+                elif string_value is not None:
+                    metadata[key] = string_value
+        
+        # Si es un dict (formato antiguo, para retrocompatibilidad)
+        elif isinstance(google_metadata, dict):
+            for key, value_obj in google_metadata.items():
+                if isinstance(value_obj, dict):
+                    if "numeric_value" in value_obj:
+                        metadata[key] = value_obj["numeric_value"]
+                    elif "string_value" in value_obj:
+                        metadata[key] = value_obj["string_value"]
+                else:
+                    metadata[key] = value_obj
 
         return metadata
 
@@ -72,41 +142,62 @@ class DocumentService:
                 tmp_file.write(file_content.read())
 
             try:
-                # Subir usando upload_to_file_search_store (método simple que funciona)
-                #
-                # ⚠️ LIMITACIÓN CONOCIDA: METADATOS NO FUNCIONALES
-                # ============================================
-                # La subida de metadatos personalizados NO está implementada actualmente.
-                #
-                # PROBLEMA:
-                # - El SDK google-genai (v1.50.1) requiere un formato específico para customMetadata
-                # - Los intentos de pasar metadata han fallado con errores de validación Pydantic
-                # - Formato esperado por el SDK: lista de objetos con estructura específica
-                #
-                # INTENTOS PREVIOS QUE FALLARON:
-                # 1. Pasar config con customMetadata como dict → Error: "Input should be a valid list"
-                # 2. Usar Files API + import_file → Error: "Files.upload() got unexpected keyword argument 'file_path'"
-                #
-                # ESTADO ACTUAL:
-                # - Los documentos se suben correctamente SIN metadatos
-                # - Si se proporcionan metadatos, se registra un warning y se ignoran
-                # - La UI permite introducir metadatos pero no se aplican
-                #
-                # PRÓXIMOS PASOS:
-                # - Investigar la documentación oficial del SDK para customMetadata
-                # - Probar formato de lista correcto para customMetadata
-                # - Implementar conversión de metadata a formato Google compatible
-                #
+                # Subir usando upload_to_file_search_store
+                # Ahora con soporte completo para metadata personalizada
                 logger.info(f"Starting upload of {filename} to store {store_id}")
+                
+                # Construir configuración de upload
+                upload_config = {}
+                google_metadata = None
+                
+                # Añadir metadata personalizada si se proporciona
                 if metadata:
-                    logger.warning(f"Metadata provided but not supported yet: {metadata}")
-                if display_name:
-                    logger.warning(f"Display name provided but not supported yet: {display_name}")
-
-                operation = client.file_search_stores.upload_to_file_search_store(
-                    file=tmp_path,
-                    file_search_store_name=store_id
-                )
+                    google_metadata = self._convert_metadata_to_google_format(metadata)
+                    if google_metadata:
+                        logger.info(f"Uploading with {len(google_metadata)} metadata fields")
+                        logger.debug(f"Original metadata: {metadata}")
+                        logger.debug(f"Google metadata format: {google_metadata}")
+                
+                # Intentar pasar metadata directamente como parámetro
+                # Según la documentación, custom_metadata puede ser un parámetro directo
+                try:
+                    if google_metadata:
+                        logger.info("Attempting upload with custom_metadata parameter...")
+                        operation = client.file_search_stores.upload_to_file_search_store(
+                            file=tmp_path,
+                            file_search_store_name=store_id,
+                            custom_metadata=google_metadata
+                        )
+                    else:
+                        logger.info("Uploading without metadata...")
+                        operation = client.file_search_stores.upload_to_file_search_store(
+                            file=tmp_path,
+                            file_search_store_name=store_id
+                        )
+                except TypeError as te:
+                    # Si falla, intentar con config usando snake_case (estándar en Python SDK)
+                    logger.warning(f"custom_metadata parameter failed: {te}, trying config approach...")
+                    
+                    # INTENTO 1: custom_metadata (snake_case)
+                    upload_config['custom_metadata'] = google_metadata
+                    logger.debug(f"Upload config (snake_case): {upload_config}")
+                    
+                    try:
+                        operation = client.file_search_stores.upload_to_file_search_store(
+                            file=tmp_path,
+                            file_search_store_name=store_id,
+                            config=upload_config
+                        )
+                    except Exception as e_config:
+                        logger.warning(f"Config with custom_metadata failed: {e_config}")
+                        # INTENTO 2: metadata (algunas versiones usan este nombre)
+                        upload_config = {'metadata': google_metadata}
+                        logger.debug(f"Retrying with config 'metadata': {upload_config}")
+                        operation = client.file_search_stores.upload_to_file_search_store(
+                            file=tmp_path,
+                            file_search_store_name=store_id,
+                            config=upload_config
+                        )
 
                 # Esperar a que se complete la operación (es asíncrona)
                 import time
@@ -202,6 +293,14 @@ class DocumentService:
 
             # Iterar sobre el pager
             for doc in pager.page:
+                # Debug logging para investigar problema de metadata
+                if hasattr(doc, 'custom_metadata') and doc.custom_metadata:
+                    logger.info(f"Document {doc.display_name} has metadata: {doc.custom_metadata}")
+                else:
+                    logger.debug(f"Document {doc.display_name} has NO metadata in SDK object")
+                    # Intentar ver si está en otro atributo o diccionario interno
+                    logger.debug(f"Doc dir: {dir(doc)}")
+                
                 documents.append(DocumentResponse(
                     name=doc.name,
                     display_name=doc.display_name or "Untitled",
