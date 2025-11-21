@@ -40,7 +40,9 @@ Esta aplicación usa el **SDK oficial `google-genai`** (v1.6.1+). El SDK anterio
   - Actualización de documentos (eliminar + recrear)
   - Eliminación de documentos con forzado (force delete para documentos indexados)
   - Preservación de nombres de archivo originales
-  - ⚠️ **Pendiente**: Subida de metadatos personalizados (funcionalidad en desarrollo)
+  - Eliminación de documentos con forzado (force delete para documentos indexados)
+  - Preservación de nombres de archivo originales
+  - **Soporte completo para metadatos personalizados** (texto y numéricos)
 
 - **Consultas RAG**
   - Preguntas en lenguaje natural
@@ -82,10 +84,16 @@ Esta aplicación usa el **SDK oficial `google-genai`** (v1.6.1+). El SDK anterio
   - Ver [MULTI_PROJECT.md](MULTI_PROJECT.md) para más detalles
 
 - **Base para Sincronización con Google Drive**
-  - Modelos de datos preparados
+  - Modelos de datos preparados con persistencia en SQLite
   - Endpoints stub implementados
   - UI para configurar vínculos Drive → File Search
+  - Columna de proyecto para identificar origen de archivos
   - Estructura para sincronización manual/automática
+
+- **🆕 Navegador de Archivos del Servidor**
+  - Explorar archivos locales del servidor desde la UI
+  - Selección directa de archivos para subir
+  - Navegación segura con restricciones de directorio
 
 ## 🏗️ Arquitectura
 
@@ -379,7 +387,7 @@ La aplicación se puede usar de **4 formas diferentes**:
 4. Haz clic en **Upload**
 5. El documento se indexará automáticamente en el File Search store
 
-**Nota**: La funcionalidad de metadatos personalizados está pendiente de implementación.
+5. El documento se indexará automáticamente en el File Search store con los metadatos proporcionados
 
 ### 4. Realizar Consultas RAG
 
@@ -545,30 +553,25 @@ Los logs aparecen en la consola del servidor backend.
 
 ## 📝 Limitaciones Conocidas
 
-1. **⚠️ Metadatos en Documentos**: La subida de metadatos personalizados al subir archivos NO está funcional actualmente
-   - **Estado**: Pendiente de implementación
-   - **Problema**: El SDK `google-genai` (v1.50.1) requiere un formato específico de metadatos que aún no está correctamente implementado
-   - **Funcionalidad actual**: Los documentos se suben correctamente pero sin metadatos
-   - **Próximos pasos**: Investigar la sintaxis correcta del SDK para el parámetro `customMetadata` en `upload_to_file_search_store()`
-   - La UI permite introducir metadatos pero estos se ignoran durante la subida (se registra un warning en los logs)
+1. **Sincronización con Drive**: Implementada como stub, requiere:
+   - Autenticación OAuth 2.0
+   - Integración con Google Drive API
+   - Scheduler para sincronización automática
 
-2. **Sincronización con Drive**: Implementada como stub, requiere:
+2. **Paginación**: Implementada en backend, UI básica en frontend
    - Autenticación OAuth 2.0
    - Integración con Google Drive API
    - Scheduler para sincronización automática
 
 3. **Paginación**: Implementada en backend, UI básica en frontend
 
-4. **Persistencia de Drive Links**: En memoria (se pierden al reiniciar el servidor)
-   - Para producción: usar base de datos (PostgreSQL, MongoDB, etc.)
+3. **Persistencia de Drive Links**: Implementada con SQLite (backend/filesearch.db)
 
 ## 🚧 Futuras Mejoras
 
 ### Prioridad Alta
-- [ ] **Implementar subida de metadatos personalizados en documentos** (funcionalidad crítica pendiente)
-  - Investigar formato correcto para `customMetadata` en el SDK
-  - Implementar conversión de metadatos a formato Google
-  - Probar con metadatos numéricos y de texto
+- [x] **✅ COMPLETADO**: Implementar subida de metadatos personalizados en documentos
+- [x] **✅ COMPLETADO**: Navegador de archivos del servidor
 
 ### Otras Mejoras
 - [ ] Implementación completa de sincronización con Google Drive
