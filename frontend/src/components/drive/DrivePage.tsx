@@ -201,8 +201,12 @@ const DrivePage: React.FC = () => {
         <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
           <CircularProgress />
         </Box>
-      ) : links.length === 0 ? (
-        <Alert severity="info">No Drive links configured.</Alert>
+      ) : links.filter(link => stores.some(s => s.name === link.store_id)).length === 0 ? (
+        <Alert severity="info">
+          {links.length > 0
+            ? "No Drive links found for the active project (switch projects to see other links)."
+            : "No Drive links configured."}
+        </Alert>
       ) : (
         <TableContainer component={Paper}>
           <Table>
@@ -219,83 +223,85 @@ const DrivePage: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {links.map((link) => (
-                <TableRow key={link.id}>
-                  <TableCell>
-                    {link.drive_file_name ? (
-                      <Tooltip title={`File ID: ${link.drive_file_id}`} arrow>
-                        <Box component="span" sx={{ cursor: 'help' }}>
-                          {link.drive_file_name}
-                        </Box>
-                      </Tooltip>
-                    ) : (
-                      <Typography variant="body2" color="text.secondary" sx={{ fontFamily: 'monospace', fontSize: '0.75rem' }}>
-                        {link.drive_file_id}
-                      </Typography>
-                    )}
-                  </TableCell>
-                  <TableCell>{getStoreDisplayName(link.store_id)}</TableCell>
-                  <TableCell>
-                    {activeProject ? (
-                      <Chip label={activeProject.name} size="small" variant="outlined" />
-                    ) : (
-                      <Typography variant="caption" color="text.secondary">-</Typography>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      label={link.sync_mode}
-                      size="small"
-                      color={link.sync_mode === SyncMode.AUTO ? 'primary' : 'default'}
-                    />
-                    {link.sync_interval_minutes && (
-                      <Typography variant="caption" display="block">
-                        Every {link.sync_interval_minutes}min
-                      </Typography>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Chip label={`v${link.version}`} size="small" color="primary" />
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      label={link.status}
-                      size="small"
-                      color={link.status === 'synced' ? 'success' : 'default'}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    {link.last_synced_at
-                      ? new Date(link.last_synced_at).toLocaleString()
-                      : 'Never'}
-                  </TableCell>
-                  <TableCell>
-                    <IconButton size="small" onClick={() => handleSync(link.id)} title="Sync Now">
-                      <Sync />
-                    </IconButton>
-                    <IconButton
-                      size="small"
-                      onClick={() => {
-                        setSelectedLinkId(link.id);
-                        setOpenReplace(true);
-                      }}
-                      title="Replace File"
-                    >
-                      <Upload />
-                    </IconButton>
-                    <IconButton
-                      size="small"
-                      onClick={() => handleShowHistory(link.id)}
-                      title="Version History"
-                    >
-                      <History />
-                    </IconButton>
-                    <IconButton size="small" color="error" onClick={() => handleDelete(link.id)}>
-                      <Delete />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {links
+                .filter(link => stores.some(s => s.name === link.store_id))
+                .map((link) => (
+                  <TableRow key={link.id}>
+                    <TableCell>
+                      {link.drive_file_name ? (
+                        <Tooltip title={`File ID: ${link.drive_file_id}`} arrow>
+                          <Box component="span" sx={{ cursor: 'help' }}>
+                            {link.drive_file_name}
+                          </Box>
+                        </Tooltip>
+                      ) : (
+                        <Typography variant="body2" color="text.secondary" sx={{ fontFamily: 'monospace', fontSize: '0.75rem' }}>
+                          {link.drive_file_id}
+                        </Typography>
+                      )}
+                    </TableCell>
+                    <TableCell>{getStoreDisplayName(link.store_id)}</TableCell>
+                    <TableCell>
+                      {activeProject ? (
+                        <Chip label={activeProject.name} size="small" variant="outlined" />
+                      ) : (
+                        <Typography variant="caption" color="text.secondary">-</Typography>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={link.sync_mode}
+                        size="small"
+                        color={link.sync_mode === SyncMode.AUTO ? 'primary' : 'default'}
+                      />
+                      {link.sync_interval_minutes && (
+                        <Typography variant="caption" display="block">
+                          Every {link.sync_interval_minutes}min
+                        </Typography>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Chip label={`v${link.version}`} size="small" color="primary" />
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={link.status}
+                        size="small"
+                        color={link.status === 'synced' ? 'success' : 'default'}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      {link.last_synced_at
+                        ? new Date(link.last_synced_at).toLocaleString()
+                        : 'Never'}
+                    </TableCell>
+                    <TableCell>
+                      <IconButton size="small" onClick={() => handleSync(link.id)} title="Sync Now">
+                        <Sync />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        onClick={() => {
+                          setSelectedLinkId(link.id);
+                          setOpenReplace(true);
+                        }}
+                        title="Replace File"
+                      >
+                        <Upload />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        onClick={() => handleShowHistory(link.id)}
+                        title="Version History"
+                      >
+                        <History />
+                      </IconButton>
+                      <IconButton size="small" color="error" onClick={() => handleDelete(link.id)}>
+                        <Delete />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))}
             </TableBody>
           </Table>
         </TableContainer>
