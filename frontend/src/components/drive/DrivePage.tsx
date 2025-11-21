@@ -33,13 +33,14 @@ import {
 } from '@mui/material';
 import { Add, Delete, Sync, Upload, History } from '@mui/icons-material';
 import { Tooltip } from '@mui/material';
-import { driveApi, storesApi, fileUpdatesApi } from '@/services/api';
-import type { DriveLink, Store, FileVersionHistory } from '@/types';
+import { driveApi, storesApi, fileUpdatesApi, projectsApi } from '@/services/api';
+import type { DriveLink, Store, FileVersionHistory, Project } from '@/types';
 import { SyncMode } from '@/types';
 
 const DrivePage: React.FC = () => {
   const [links, setLinks] = useState<DriveLink[]>([]);
   const [stores, setStores] = useState<Store[]>([]);
+  const [activeProject, setActiveProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(false);
   const [openCreate, setOpenCreate] = useState(false);
   const [openReplace, setOpenReplace] = useState(false);
@@ -73,12 +74,17 @@ const DrivePage: React.FC = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [linksResponse, storesResponse] = await Promise.all([
+      const [linksResponse, storesResponse, projectsResponse] = await Promise.all([
         driveApi.list(),
         storesApi.list(),
+        projectsApi.list(),
       ]);
       setLinks(linksResponse.links);
       setStores(storesResponse.stores);
+
+      // Find active project
+      const active = projectsResponse.projects.find(p => p.is_active);
+      setActiveProject(active || null);
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Error loading data');
     } finally {
@@ -204,6 +210,7 @@ const DrivePage: React.FC = () => {
               <TableRow>
                 <TableCell>Drive File</TableCell>
                 <TableCell>Store</TableCell>
+                <TableCell>Project</TableCell>
                 <TableCell>Mode</TableCell>
                 <TableCell>Version</TableCell>
                 <TableCell>Status</TableCell>
@@ -228,6 +235,13 @@ const DrivePage: React.FC = () => {
                     )}
                   </TableCell>
                   <TableCell>{getStoreDisplayName(link.store_id)}</TableCell>
+                  <TableCell>
+                    {activeProject ? (
+                      <Chip label={activeProject.name} size="small" variant="outlined" />
+                    ) : (
+                      <Typography variant="caption" color="text.secondary">-</Typography>
+                    )}
+                  </TableCell>
                   <TableCell>
                     <Chip
                       label={link.sync_mode}
