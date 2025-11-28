@@ -82,4 +82,4 @@ htmlcov/
 *.sqlite3
 
 # Backups
-backups/
+/backups/

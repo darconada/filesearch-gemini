@@ -31,6 +31,7 @@ import type {
   FileVersionHistory,
   DirectoryListing,
   FileSystemItem,
+  BackupInfo,
 } from '@/types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
@@ -381,6 +382,40 @@ export const fileBrowserApi = {
 
   getFileInfo: async (path: string): Promise<FileSystemItem> => {
     const response = await api.get('/file-browser/file-info', { params: { path } });
+    return response.data;
+  },
+};
+
+// Backups API
+export const backupsApi = {
+  list: async (): Promise<BackupInfo[]> => {
+    const response = await api.get('/backups');
+    return response.data;
+  },
+
+  create: async (): Promise<BackupInfo> => {
+    const response = await api.post('/backups');
+    return response.data;
+  },
+
+  restore: async (filename: string): Promise<{ message: string }> => {
+    const response = await api.post(`/backups/${filename}/restore`);
+    return response.data;
+  },
+
+  download: async (filename: string): Promise<Blob> => {
+    const response = await api.get(`/backups/${filename}/download`, {
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+
+  upload: async (file: File): Promise<{ message: string; filename: string }> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await api.post('/backups/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
     return response.data;
   },
 };

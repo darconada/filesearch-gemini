@@ -139,7 +139,11 @@ class DocumentService:
             tmp_path = os.path.join(unique_dir, filename)
 
             with open(tmp_path, 'wb') as tmp_file:
-                tmp_file.write(file_content.read())
+                if hasattr(file_content, 'read'):
+                    tmp_file.write(file_content.read())
+                else:
+                    # Assume it's bytes
+                    tmp_file.write(file_content)
 
             try:
                 # Subir usando upload_to_file_search_store

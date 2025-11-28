@@ -617,6 +617,16 @@ Los logs aparecen en la consola del servidor backend.
  ```
  
  **⚠️ Nota**: Al restaurar, se sobrescribirán los datos actuales en `backend/`. El script pedirá confirmación antes de proceder.
+
+ ### Gestión desde la Interfaz Web (Nuevo)
+
+ También puedes gestionar tus backups cómodamente desde la aplicación web:
+
+ 1. Ve a la sección **Backups** en el menú lateral.
+ 2. **Crear Backup**: Haz clic en el botón "Create Backup".
+ 3. **Restaurar**: Haz clic en el icono de restaurar (reloj) junto a cualquier backup.
+ 4. **Descargar**: Descarga los archivos `.tar.gz` a tu ordenador.
+ 5. **Subir y Restaurar**: Sube un archivo de backup previo y restáuralo en un solo paso.
  
  ## 🐛 Solución de Problemas
 

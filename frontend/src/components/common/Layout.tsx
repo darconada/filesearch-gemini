@@ -29,6 +29,7 @@ import {
   Folder,
   CloudUpload,
   FolderOpen,
+  Backup,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import ProjectSelector from './ProjectSelector';
@@ -49,6 +50,7 @@ const menuItems = [
   { text: 'Drive Sync', icon: <CloudSync />, path: '/drive' },
   { text: 'Drive Setup', icon: <CloudUpload />, path: '/drive-setup' },
   { text: 'Local Files', icon: <FolderOpen />, path: '/local-files' },
+  { text: 'Backups', icon: <Backup />, path: '/backups' },
   { text: 'LLM Integration', icon: <Cable />, path: '/integration' },
 ];
 

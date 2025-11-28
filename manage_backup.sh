@@ -43,23 +43,28 @@ function do_backup() {
 
 function do_restore() {
     if [ -z "$1" ]; then
-        echo "Uso: $0 restore <archivo_backup.tar.gz>"
+        echo "Uso: $0 restore <archivo_backup.tar.gz> [-f|--force]"
         echo "Ejemplo: $0 restore backups/backup_filesearch_20241128_120000.tar.gz"
         exit 1
     fi
 
     BACKUP_FILE="$1"
+    FORCE="$2"
 
     if [ ! -f "$BACKUP_FILE" ]; then
         echo "Error: El archivo $BACKUP_FILE no existe."
         exit 1
     fi
 
-    echo "ADVERTENCIA: Esto sobrescribirá la base de datos y credenciales actuales en backend/."
-    read -p "¿Estás seguro de continuar? (s/n): " confirm
-    if [[ "$confirm" != "s" && "$confirm" != "S" ]]; then
-        echo "Operación cancelada."
-        exit 0
+    if [[ "$FORCE" != "-f" && "$FORCE" != "--force" ]]; then
+        echo "ADVERTENCIA: Esto sobrescribirá la base de datos y credenciales actuales en backend/."
+        read -p "¿Estás seguro de continuar? (s/n): " confirm
+        if [[ "$confirm" != "s" && "$confirm" != "S" ]]; then
+            echo "Operación cancelada."
+            exit 0
+        fi
+    else
+        echo "Modo forzado: Saltando confirmación."
     fi
 
     echo "Restaurando desde $BACKUP_FILE..."

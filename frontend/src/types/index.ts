@@ -307,3 +307,11 @@ export interface DirectoryListing {
   parent_path?: string;
   items: FileSystemItem[];
 }
+
+// Backup types
+export interface BackupInfo {
+  filename: string;
+  size: number;
+  created_at: string;
+  path: string;
+}
