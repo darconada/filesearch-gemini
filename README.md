@@ -595,7 +595,30 @@ Los logs aparecen en la consola del servidor backend.
 - [Material-UI Documentation](https://mui.com/)
 - [React Router](https://reactrouter.com/)
 
-## 🐛 Solución de Problemas
+## 💾 Backup & Restore
+ 
+ El proyecto incluye un script `manage_backup.sh` para facilitar el respaldo y restauración de la base de datos y credenciales locales.
+ 
+ ### Crear un Backup
+ 
+ ```bash
+ ./manage_backup.sh backup
+ ```
+ 
+ Esto creará un archivo `.tar.gz` en la carpeta `backups/` conteniendo:
+ - `backend/app.db` (Base de datos)
+ - `backend/token.json` (Sesión de Google Drive)
+ - `backend/credentials.json` (Credenciales OAuth)
+ 
+ ### Restaurar un Backup
+ 
+ ```bash
+ ./manage_backup.sh restore backups/backup_filesearch_YYYYMMDD_HHMMSS.tar.gz
+ ```
+ 
+ **⚠️ Nota**: Al restaurar, se sobrescribirán los datos actuales en `backend/`. El script pedirá confirmación antes de proceder.
+ 
+ ## 🐛 Solución de Problemas
 
 ### Backend no inicia
 
