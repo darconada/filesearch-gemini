@@ -28,6 +28,7 @@ import {
   Cable,
   Folder,
   CloudUpload,
+  History,
   FolderOpen,
   Backup,
 } from '@mui/icons-material';
@@ -51,6 +52,7 @@ const menuItems = [
   { text: 'Drive Setup', icon: <CloudUpload />, path: '/drive-setup' },
   { text: 'Local Files', icon: <FolderOpen />, path: '/local-files' },
   { text: 'Backups', icon: <Backup />, path: '/backups' },
+  { text: 'Audit Logs', icon: <History />, path: '/audit-logs' },
   { text: 'LLM Integration', icon: <Cable />, path: '/integration' },
 ];
 

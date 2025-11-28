@@ -6,7 +6,7 @@ from app.models.local_file import (
     LocalFileLinkResponse,
     LocalFileLinkList
 )
-from app.models.db_models import LocalFileLinkDB
+from app.models.db_models import LocalFileLinkDB, ProjectDB
 from app.services.document_service import document_service
 import logging
 from datetime import datetime, timezone
@@ -68,6 +68,8 @@ class LocalFileService:
             file_name=db_link.file_name,
             store_id=db_link.store_id,
             document_id=db_link.document_id,
+            project_id=db_link.project_id,
+            custom_metadata=db_link.custom_metadata,
             file_size=db_link.file_size,
             file_hash=db_link.file_hash,
             last_modified_at=db_link.last_modified_at,
@@ -94,6 +96,16 @@ class LocalFileService:
             if existing_link:
                 raise ValueError(f"A link for this file already exists: {existing_link.id}")
 
+            # Determinar project_id: usar el proporcionado o el proyecto activo
+            project_id = link_data.project_id
+            if project_id is None:
+                active_project = db.query(ProjectDB).filter(ProjectDB.is_active == True).first()
+                if active_project:
+                    project_id = active_project.id
+                    logger.info(f"Assigning file to active project: {active_project.name} (ID: {project_id})")
+                else:
+                    logger.warning("No active project found, file will be created without project assignment")
+
             # Obtener metadata del archivo
             metadata = self._get_file_metadata(str(file_path))
 
@@ -107,6 +119,8 @@ class LocalFileService:
                 file_name=file_path.name,
                 store_id=link_data.store_id,
                 document_id=None,
+                project_id=project_id,
+                custom_metadata=link_data.metadata,
                 file_size=metadata["size"],
                 file_hash=None,  # Se calculará en el primer sync
                 last_modified_at=metadata["modified_time"],
@@ -121,7 +135,7 @@ class LocalFileService:
             db.commit()
             db.refresh(db_link)
 
-            logger.info(f"Local file link created: {link_id} for {file_path}")
+            logger.info(f"Local file link created: {link_id} for {file_path} (project_id: {project_id})")
 
             return self._db_to_response(db_link)
 
@@ -130,11 +144,35 @@ class LocalFileService:
             logger.error(f"Error creating local file link: {e}")
             raise
 
-    def list_links(self, db: Session, store_id: Optional[str] = None) -> LocalFileLinkList:
-        """Listar todos los vínculos de archivos locales"""
+    def list_links(self, db: Session, store_id: Optional[str] = None,
+                   project_id: Optional[int] = None, all_projects: bool = False) -> LocalFileLinkList:
+        """
+        Listar todos los vínculos de archivos locales
+
+        Args:
+            db: Database session
+            store_id: Filtrar por store específico
+            project_id: Filtrar por proyecto específico
+            all_projects: Si True, muestra archivos de todos los proyectos
+        """
         query = db.query(LocalFileLinkDB)
+
+        # Filtrar por proyecto activo por defecto, a menos que se especifique all_projects
+        if not all_projects:
+            if project_id is None:
+                # Obtener proyecto activo
+                active_project = db.query(ProjectDB).filter(ProjectDB.is_active == True).first()
+                if active_project:
+                    project_id = active_project.id
+                    logger.debug(f"Filtering local files by active project: {active_project.name} (ID: {project_id})")
+
+            if project_id is not None:
+                query = query.filter(LocalFileLinkDB.project_id == project_id)
+
+        # Filtrar por store si se especifica
         if store_id:
             query = query.filter(LocalFileLinkDB.store_id == store_id)
+
         links = query.all()
         return LocalFileLinkList(links=[self._db_to_response(link) for link in links])
 
@@ -235,6 +273,17 @@ class LocalFileService:
                     logger.warning(f"Could not delete old document: {e}")
 
             # 6. Subir nuevo documento al store
+            # Combinar metadata automática del sistema con metadata personalizada del usuario
+            auto_metadata = {
+                "local_file_path": str(file_path),
+                "synced_from": "local_filesystem",
+                "file_hash": current_hash,
+                "last_modified": current_metadata["modified_time"].isoformat()
+            }
+
+            # Combinar: custom metadata tiene prioridad (se puede sobrescribir automática)
+            combined_metadata = {**auto_metadata, **(link.custom_metadata or {})}
+
             # Abrir el archivo y pasar el file object (BinaryIO) directamente
             logger.info(f"Uploading document to store {link.store_id}")
             with open(file_path, "rb") as file_obj:
@@ -243,12 +292,7 @@ class LocalFileService:
                     file_content=file_obj,
                     filename=link.file_name,
                     display_name=link.file_name,
-                    metadata={
-                        "local_file_path": str(file_path),
-                        "synced_from": "local_filesystem",
-                        "file_hash": current_hash,
-                        "last_modified": current_metadata["modified_time"].isoformat()
-                    }
+                    metadata=combined_metadata
                 )
 
             # 8. Actualizar el vínculo
@@ -274,11 +318,30 @@ class LocalFileService:
             db.commit()
             raise
 
-    def sync_all(self, db: Session, store_id: Optional[str] = None) -> List[LocalFileLinkResponse]:
+    def sync_all(self, db: Session, store_id: Optional[str] = None,
+                 project_id: Optional[int] = None, all_projects: bool = False) -> List[LocalFileLinkResponse]:
         """
-        Sincronizar todos los archivos locales (opcionalmente filtrados por store)
+        Sincronizar todos los archivos locales
+
+        Args:
+            db: Database session
+            store_id: Filtrar por store específico
+            project_id: Filtrar por proyecto específico
+            all_projects: Si True, sincroniza archivos de todos los proyectos
         """
         query = db.query(LocalFileLinkDB)
+
+        # Filtrar por proyecto activo por defecto
+        if not all_projects:
+            if project_id is None:
+                active_project = db.query(ProjectDB).filter(ProjectDB.is_active == True).first()
+                if active_project:
+                    project_id = active_project.id
+                    logger.info(f"Syncing local files for active project: {active_project.name} (ID: {project_id})")
+
+            if project_id is not None:
+                query = query.filter(LocalFileLinkDB.project_id == project_id)
+
         if store_id:
             query = query.filter(LocalFileLinkDB.store_id == store_id)
 

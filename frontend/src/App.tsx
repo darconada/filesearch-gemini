@@ -17,6 +17,7 @@ import LocalFilesPage from '@/components/local/LocalFilesPage';
 import IntegrationPage from '@/components/integration/IntegrationPage';
 import ProjectsPage from '@/components/projects/ProjectsPage';
 import BackupsPage from '@/components/backups/BackupsPage';
+import AuditLogsPage from '@/components/audit/AuditLogsPage';
 
 // Create React Query client
 const queryClient = new QueryClient({
@@ -62,6 +63,7 @@ function App() {
               <Route path="/drive-setup" element={<DriveSetupPage />} />
               <Route path="/local-files" element={<LocalFilesPage />} />
               <Route path="/backups" element={<BackupsPage />} />
+              <Route path="/audit-logs" element={<AuditLogsPage />} />
               <Route path="/integration" element={<IntegrationPage />} />
             </Routes>
           </Layout>

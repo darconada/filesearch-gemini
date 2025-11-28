@@ -30,6 +30,38 @@ class QueryService:
         finally:
             db.close()
 
+    def _parse_metadata_filter(self, filter_str: str) -> str:
+        """
+        Parsear y normalizar el filtro de metadata al formato correcto de Google AIP-160
+
+        Acepta:
+        - "type: Framework" → "type=Framework"
+        - "type=Framework" → "type=Framework"
+        - "author: Robert Graves" → 'author="Robert Graves"'
+
+        Retorna el formato correcto para la API de Google
+        """
+        if not filter_str or not filter_str.strip():
+            return ""
+
+        # Normalizar: reemplazar ":" por "=" si existe
+        normalized = filter_str.replace(": ", "=").replace(":", "=")
+
+        # Si tiene "=" procesar el key y value
+        if "=" in normalized:
+            parts = normalized.split("=", 1)  # Split solo en el primer =
+            if len(parts) == 2:
+                key = parts[0].strip()
+                value = parts[1].strip()
+
+                # Si el valor tiene espacios y no está entre comillas, añadirlas
+                if " " in value and not (value.startswith('"') and value.endswith('"')):
+                    value = f'"{value}"'
+
+                return f"{key}={value}"
+
+        return normalized
+
     def execute_query(self, query: QueryRequest) -> QueryResponse:
         """Ejecutar una consulta RAG usando File Search"""
         try:
@@ -46,7 +78,10 @@ class QueryService:
 
             # Añadir filtro de metadata si se proporciona
             if query.metadata_filter:
-                file_search_tool.file_search.metadata_filter = query.metadata_filter
+                # Normalizar el filtro al formato correcto (AIP-160)
+                normalized_filter = self._parse_metadata_filter(query.metadata_filter)
+                logger.info(f"Metadata filter - Original: '{query.metadata_filter}' → Normalized: '{normalized_filter}'")
+                file_search_tool.file_search.metadata_filter = normalized_filter
 
             # Configurar GenerateContentConfig - primero solo con tools
             # Los parámetros de generación pueden no ser soportados en esta versión

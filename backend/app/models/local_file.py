@@ -1,6 +1,6 @@
 """Modelos para sincronización de archivos locales"""
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, Dict, Any
 from datetime import datetime
 
 
@@ -8,6 +8,8 @@ class LocalFileLinkCreate(BaseModel):
     """Request para crear un vínculo de archivo local -> File Search"""
     local_file_path: str = Field(..., description="Ruta absoluta al archivo local")
     store_id: str = Field(..., description="ID del store de destino")
+    project_id: Optional[int] = Field(None, description="ID del proyecto (None = proyecto activo actual)")
+    metadata: Optional[Dict[str, Any]] = Field(None, description="Metadata personalizada (hasta 20 key-value pairs)")
 
 
 class LocalFileLinkResponse(BaseModel):
@@ -17,6 +19,12 @@ class LocalFileLinkResponse(BaseModel):
     file_name: str
     store_id: str
     document_id: Optional[str] = Field(None, description="ID del documento en File Search")
+
+    # Project association
+    project_id: Optional[int] = Field(None, description="ID del proyecto asociado")
+
+    # Custom metadata
+    custom_metadata: Optional[Dict[str, Any]] = Field(None, description="Metadata personalizada del usuario")
 
     # File metadata
     file_size: Optional[int] = None

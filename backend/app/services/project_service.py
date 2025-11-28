@@ -7,6 +7,7 @@ from fastapi import HTTPException
 from app.models.db_models import ProjectDB
 from app.models.project import ProjectCreate, ProjectUpdate, Project, ProjectList
 from app.services.google_client import google_client
+from app.services.encryption_service import encryption_service
 
 logger = logging.getLogger(__name__)
 
@@ -34,10 +35,13 @@ class ProjectService:
         has_projects = db.query(ProjectDB).first() is not None
         is_first = not has_projects
 
+        # Encriptar la API key antes de guardar
+        encrypted_api_key = encryption_service.encrypt(project_data.api_key)
+
         # Crear el proyecto
         db_project = ProjectDB(
             name=project_data.name,
-            api_key=project_data.api_key,
+            api_key=encrypted_api_key,
             description=project_data.description,
             model_name=project_data.model_name,  # Modelo específico o None para usar el default global
             is_active=is_first  # El primer proyecto se marca como activo automáticamente
@@ -51,7 +55,8 @@ class ProjectService:
 
         # Si es el primer proyecto y se marcó como activo, configurar el cliente
         if is_first:
-            google_client.configure(db_project.api_key)
+            decrypted_key = encryption_service.decrypt(db_project.api_key)
+            google_client.configure(decrypted_key)
             logger.info(f"Google client configured with project: {db_project.name}")
 
         return self._to_project_model(db_project)
@@ -105,11 +110,14 @@ class ProjectService:
                 is_valid, error = google_client.test_connection()
                 if not is_valid:
                     raise HTTPException(status_code=400, detail=f"Invalid API key: {error}")
-                project.api_key = project_data.api_key
+
+                # Encriptar la nueva API key
+                encrypted_key = encryption_service.encrypt(project_data.api_key)
+                project.api_key = encrypted_key
 
                 # Si este es el proyecto activo, reconfigurar el cliente
                 if project.is_active:
-                    google_client.configure(project.api_key)
+                    google_client.configure(project_data.api_key)
                     logger.info(f"Google client reconfigured with updated API key for project: {project.name}")
 
             except HTTPException:
@@ -133,24 +141,36 @@ class ProjectService:
 
     def activate_project(self, db: Session, project_id: int) -> Project:
         """Activar un proyecto (desactiva todos los demás)"""
+        logger.info(f"Attempting to activate project ID: {project_id}")
+
         project = db.query(ProjectDB).filter(ProjectDB.id == project_id).first()
         if not project:
+            logger.error(f"Project {project_id} not found")
             raise HTTPException(status_code=404, detail=f"Project {project_id} not found")
+
+        logger.info(f"Found project: {project.name}")
 
         # Desactivar todos los proyectos
         db.query(ProjectDB).update({ProjectDB.is_active: False})
+        logger.info("Deactivated all projects")
 
         # Activar el proyecto seleccionado
         project.is_active = True
         db.commit()
         db.refresh(project)
+        logger.info(f"Project {project.name} marked as active in database")
 
         # Reconfigurar el cliente de Google con la API key del nuevo proyecto activo
         try:
-            google_client.configure(project.api_key)
-            logger.info(f"Google client configured with project: {project.name}")
+            logger.info("Attempting to decrypt API key...")
+            decrypted_key = encryption_service.decrypt(project.api_key)
+            logger.info("API key decrypted successfully, configuring Google client...")
+            google_client.configure(decrypted_key)
+            logger.info(f"✓ Google client configured successfully with project: {project.name}")
         except Exception as e:
-            logger.error(f"Error configuring Google client: {e}")
+            logger.error(f"✗ Error configuring Google client: {type(e).__name__}: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
             raise HTTPException(status_code=500, detail=f"Error activating project: {str(e)}")
 
         return self._to_project_model(project)
@@ -175,7 +195,8 @@ class ProjectService:
             if next_project:
                 next_project.is_active = True
                 db.commit()
-                google_client.configure(next_project.api_key)
+                decrypted_key = encryption_service.decrypt(next_project.api_key)
+                google_client.configure(decrypted_key)
                 logger.info(f"Activated next project: {next_project.name}")
             else:
                 logger.warning("No projects remaining, Google client not configured")

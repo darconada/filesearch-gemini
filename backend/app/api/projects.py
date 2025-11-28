@@ -1,10 +1,12 @@
 """Endpoints para gestión de proyectos"""
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.project import ProjectCreate, ProjectUpdate, Project, ProjectList
 from app.services.project_service import project_service
+from app.services.audit_service import audit_service
+from app.models.db_models import AuditAction
 import logging
 
 logger = logging.getLogger(__name__)
@@ -13,7 +15,7 @@ router = APIRouter(prefix="/projects", tags=["projects"])
 
 
 @router.post("", response_model=Project, status_code=201)
-async def create_project(project: ProjectCreate, db: Session = Depends(get_db)):
+async def create_project(project: ProjectCreate, request: Request, db: Session = Depends(get_db)):
     """
     Crear un nuevo proyecto de Google AI Studio
 
@@ -21,11 +23,42 @@ async def create_project(project: ProjectCreate, db: Session = Depends(get_db)):
     Si es el primer proyecto, se marcará como activo automáticamente.
     """
     try:
-        return project_service.create_project(db, project)
-    except HTTPException:
+        result = project_service.create_project(db, project)
+
+        # Audit log
+        audit_service.log(
+            db=db,
+            action=AuditAction.PROJECT_CREATE,
+            resource_type="project",
+            resource_id=str(result.id),
+            details={"project_name": result.name},
+            request=request
+        )
+
+        return result
+    except HTTPException as e:
+        # Audit log del error
+        audit_service.log(
+            db=db,
+            action=AuditAction.PROJECT_CREATE,
+            resource_type="project",
+            details={"project_name": project.name, "error": str(e.detail)},
+            success=False,
+            error_message=str(e.detail),
+            request=request
+        )
         raise
     except Exception as e:
         logger.error(f"Error creating project: {e}")
+        audit_service.log(
+            db=db,
+            action=AuditAction.PROJECT_CREATE,
+            resource_type="project",
+            details={"project_name": project.name},
+            success=False,
+            error_message=str(e),
+            request=request
+        )
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -70,20 +103,54 @@ async def get_project(project_id: int, db: Session = Depends(get_db)):
 async def update_project(
     project_id: int,
     project: ProjectUpdate,
+    request: Request,
     db: Session = Depends(get_db)
 ):
     """Actualizar un proyecto (nombre, descripción o API key)"""
     try:
-        return project_service.update_project(db, project_id, project)
-    except HTTPException:
+        result = project_service.update_project(db, project_id, project)
+
+        # Audit log
+        audit_service.log(
+            db=db,
+            action=AuditAction.PROJECT_UPDATE,
+            resource_type="project",
+            resource_id=str(project_id),
+            details={
+                "project_name": result.name,
+                "updated_fields": project.model_dump(exclude_unset=True)
+            },
+            request=request
+        )
+
+        return result
+    except HTTPException as e:
+        audit_service.log(
+            db=db,
+            action=AuditAction.PROJECT_UPDATE,
+            resource_type="project",
+            resource_id=str(project_id),
+            success=False,
+            error_message=str(e.detail),
+            request=request
+        )
         raise
     except Exception as e:
         logger.error(f"Error updating project: {e}")
+        audit_service.log(
+            db=db,
+            action=AuditAction.PROJECT_UPDATE,
+            resource_type="project",
+            resource_id=str(project_id),
+            success=False,
+            error_message=str(e),
+            request=request
+        )
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/{project_id}/activate", response_model=Project)
-async def activate_project(project_id: int, db: Session = Depends(get_db)):
+async def activate_project(project_id: int, request: Request, db: Session = Depends(get_db)):
     """
     Activar un proyecto
 
@@ -91,25 +158,89 @@ async def activate_project(project_id: int, db: Session = Depends(get_db)):
     de Google para usar la API key de este proyecto.
     """
     try:
-        return project_service.activate_project(db, project_id)
-    except HTTPException:
+        result = project_service.activate_project(db, project_id)
+
+        # Audit log
+        audit_service.log(
+            db=db,
+            action=AuditAction.PROJECT_ACTIVATE,
+            resource_type="project",
+            resource_id=str(project_id),
+            details={"project_name": result.name},
+            request=request
+        )
+
+        return result
+    except HTTPException as e:
+        audit_service.log(
+            db=db,
+            action=AuditAction.PROJECT_ACTIVATE,
+            resource_type="project",
+            resource_id=str(project_id),
+            success=False,
+            error_message=str(e.detail),
+            request=request
+        )
         raise
     except Exception as e:
         logger.error(f"Error activating project: {e}")
+        audit_service.log(
+            db=db,
+            action=AuditAction.PROJECT_ACTIVATE,
+            resource_type="project",
+            resource_id=str(project_id),
+            success=False,
+            error_message=str(e),
+            request=request
+        )
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.delete("/{project_id}")
-async def delete_project(project_id: int, db: Session = Depends(get_db)):
+async def delete_project(project_id: int, request: Request, db: Session = Depends(get_db)):
     """
     Eliminar un proyecto
 
     Si era el proyecto activo, se activará otro automáticamente (si existe).
     """
     try:
-        return project_service.delete_project(db, project_id)
-    except HTTPException:
+        # Obtener nombre del proyecto antes de eliminarlo
+        project = project_service.get_project(db, project_id)
+        project_name = project.name
+
+        result = project_service.delete_project(db, project_id)
+
+        # Audit log
+        audit_service.log(
+            db=db,
+            action=AuditAction.PROJECT_DELETE,
+            resource_type="project",
+            resource_id=str(project_id),
+            details={"project_name": project_name},
+            request=request
+        )
+
+        return result
+    except HTTPException as e:
+        audit_service.log(
+            db=db,
+            action=AuditAction.PROJECT_DELETE,
+            resource_type="project",
+            resource_id=str(project_id),
+            success=False,
+            error_message=str(e.detail),
+            request=request
+        )
         raise
     except Exception as e:
         logger.error(f"Error deleting project: {e}")
+        audit_service.log(
+            db=db,
+            action=AuditAction.PROJECT_DELETE,
+            resource_type="project",
+            resource_id=str(project_id),
+            success=False,
+            error_message=str(e),
+            request=request
+        )
         raise HTTPException(status_code=500, detail=str(e))

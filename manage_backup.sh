@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Archivos a respaldar
-FILES=("backend/app.db" "backend/token.json" "backend/credentials.json")
+FILES=("backend/app.db" "backend/token.json" "backend/credentials.json" "backend/.encryption_key")
 BACKUP_DIR="backups"
 BACKUP_NAME="${BACKUP_DIR}/backup_filesearch_$(date +%Y%m%d_%H%M%S).tar.gz"
 

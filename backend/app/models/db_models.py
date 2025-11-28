@@ -1,9 +1,49 @@
 """Modelos de base de datos SQLAlchemy"""
-from sqlalchemy import Column, String, Integer, DateTime, Boolean, Enum as SQLEnum, Text
+from sqlalchemy import Column, String, Integer, DateTime, Boolean, Enum as SQLEnum, Text, JSON
 from sqlalchemy.sql import func
 from app.database import Base
 from app.models.drive import SyncMode
 import enum
+
+
+class AuditAction(enum.Enum):
+    """Tipos de acciones auditables"""
+    # Proyectos
+    PROJECT_CREATE = "project_create"
+    PROJECT_UPDATE = "project_update"
+    PROJECT_DELETE = "project_delete"
+    PROJECT_ACTIVATE = "project_activate"
+
+    # Stores
+    STORE_CREATE = "store_create"
+    STORE_UPDATE = "store_update"
+    STORE_DELETE = "store_delete"
+
+    # Documentos
+    DOCUMENT_UPLOAD = "document_upload"
+    DOCUMENT_DELETE = "document_delete"
+    DOCUMENT_UPDATE = "document_update"
+
+    # Drive links
+    DRIVE_LINK_CREATE = "drive_link_create"
+    DRIVE_LINK_SYNC = "drive_link_sync"
+    DRIVE_LINK_DELETE = "drive_link_delete"
+
+    # Local files
+    LOCAL_FILE_LINK_CREATE = "local_file_link_create"
+    LOCAL_FILE_SYNC = "local_file_sync"
+    LOCAL_FILE_DELETE = "local_file_delete"
+
+    # Queries
+    QUERY_EXECUTE = "query_execute"
+
+    # Backups
+    BACKUP_CREATE = "backup_create"
+    BACKUP_RESTORE = "backup_restore"
+    BACKUP_DELETE = "backup_delete"
+
+    # Config
+    CONFIG_UPDATE = "config_update"
 
 
 class ProjectDB(Base):
@@ -55,6 +95,12 @@ class LocalFileLinkDB(Base):
     store_id = Column(String, nullable=False)  # Vector store asociado
     document_id = Column(String, nullable=True)  # ID en File Search
 
+    # Project association
+    project_id = Column(Integer, nullable=True, index=True)  # Proyecto asociado
+
+    # Custom metadata (user-defined key-value pairs)
+    custom_metadata = Column(JSON, nullable=True)  # Metadata personalizada del usuario
+
     # File metadata para detectar cambios
     file_size = Column(Integer, nullable=True)  # Tamaño en bytes
     file_hash = Column(String, nullable=True)  # SHA256 del contenido
@@ -73,3 +119,19 @@ class LocalFileLinkDB(Base):
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+
+
+class AuditLogDB(Base):
+    """Modelo de base de datos para audit logs"""
+    __tablename__ = "audit_logs"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    timestamp = Column(DateTime(timezone=True), server_default=func.now(), index=True)
+    action = Column(SQLEnum(AuditAction), nullable=False, index=True)
+    user_identifier = Column(String, nullable=True)  # IP, user_id, session_id, etc.
+    resource_type = Column(String, nullable=True, index=True)  # "project", "store", "document", etc.
+    resource_id = Column(String, nullable=True, index=True)  # ID del recurso afectado
+    details = Column(JSON, nullable=True)  # Detalles adicionales en JSON
+    success = Column(Boolean, default=True, nullable=False)  # Si la operación fue exitosa
+    error_message = Column(String, nullable=True)  # Mensaje de error si falló

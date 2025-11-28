@@ -246,6 +246,8 @@ export interface LocalFileLink {
   file_name: string;
   store_id: string;
   document_id?: string;
+  project_id?: number;
+  custom_metadata?: Record<string, any>;
   file_size?: number;
   file_hash?: string;
   last_modified_at?: string;
@@ -261,6 +263,8 @@ export interface LocalFileLink {
 export interface LocalFileLinkCreate {
   local_file_path: string;
   store_id: string;
+  project_id?: number;
+  metadata?: Record<string, any>;
 }
 
 export interface LocalFileLinkList {
@@ -314,4 +318,47 @@ export interface BackupInfo {
   size: number;
   created_at: string;
   path: string;
+}
+
+// Audit Log types
+export interface AuditLog {
+  id: number;
+  timestamp: string;
+  action: string;
+  user_identifier?: string;
+  resource_type?: string;
+  resource_id?: string;
+  details?: Record<string, any>;
+  success: boolean;
+  error_message?: string;
+}
+
+export interface AuditLogList {
+  logs: AuditLog[];
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+}
+
+export interface AuditLogFilter {
+  action?: string;
+  resource_type?: string;
+  resource_id?: string;
+  user_identifier?: string;
+  success?: boolean;
+  start_date?: string;
+  end_date?: string;
+  page?: number;
+  page_size?: number;
+}
+
+export interface AuditStats {
+  period_days: number;
+  total_actions: number;
+  successful_actions: number;
+  failed_actions: number;
+  success_rate: number;
+  top_actions: Array<{ action: string; count: number }>;
+  top_users: Array<{ user: string; count: number }>;
 }

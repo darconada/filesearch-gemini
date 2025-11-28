@@ -319,8 +319,11 @@ export const projectsApi = {
 
 // Local Files API
 export const localFilesApi = {
-  list: async (storeId?: string): Promise<LocalFileLinkList> => {
-    const params = storeId ? { store_id: storeId } : {};
+  list: async (storeId?: string, projectId?: number, allProjects = false): Promise<LocalFileLinkList> => {
+    const params: Record<string, any> = {};
+    if (storeId) params.store_id = storeId;
+    if (projectId !== undefined) params.project_id = projectId;
+    if (allProjects) params.all_projects = allProjects;
     const response = await api.get('/local-files/links', { params });
     return response.data;
   },
@@ -347,8 +350,11 @@ export const localFilesApi = {
     return response.data;
   },
 
-  syncAll: async (storeId?: string): Promise<LocalFileLinkList> => {
-    const params = storeId ? { store_id: storeId } : {};
+  syncAll: async (storeId?: string, projectId?: number, allProjects = false): Promise<LocalFileLinkList> => {
+    const params: Record<string, any> = {};
+    if (storeId) params.store_id = storeId;
+    if (projectId !== undefined) params.project_id = projectId;
+    if (allProjects) params.all_projects = allProjects;
     const response = await api.post('/local-files/sync-all', null, { params });
     return response.data;
   },
@@ -418,6 +424,22 @@ export const backupsApi = {
     });
     return response.data;
   },
+};
+
+// Añadir funciones de Audit Logs
+api.getAuditLogs = async (filters?: any) => {
+  const response = await api.get('/audit-logs/', { params: filters });
+  return response.data;
+};
+
+api.getAuditStats = async (days: number = 30) => {
+  const response = await api.get('/audit-logs/stats/summary', { params: { days } });
+  return response.data;
+};
+
+api.cleanupOldLogs = async (days: number = 90) => {
+  const response = await api.delete('/audit-logs/cleanup', { params: { days } });
+  return response.data;
 };
 
 export default api;

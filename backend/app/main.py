@@ -3,11 +3,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from app.config import settings
-from app.api import config, stores, documents, query, drive, mcp_config, projects, local_files, file_updates, file_browser, backups
+from app.api import config, stores, documents, query, drive, mcp_config, projects, local_files, file_updates, file_browser, backups, audit_logs
 from app.database import init_db, SessionLocal
 from app.scheduler import start_scheduler, stop_scheduler
 from app.models.db_models import ProjectDB
 from app.services.google_client import google_client
+from app.services.encryption_service import encryption_service
 import logging
 
 # Configurar logging
@@ -27,7 +28,9 @@ def load_active_project():
 
         if active_project:
             logger.info(f"Loading active project: {active_project.name} (ID: {active_project.id})")
-            google_client.configure(active_project.api_key)
+            # Desencriptar la API key antes de configurar el cliente
+            decrypted_key = encryption_service.decrypt(active_project.api_key)
+            google_client.configure(decrypted_key)
         else:
             # Si no hay proyecto activo, intentar usar la API key de settings (retrocompatibilidad)
             if settings.api_key:
@@ -103,6 +106,7 @@ app.include_router(file_updates.router)  # File updates/replace
 app.include_router(file_browser.router)  # Server file browser
 app.include_router(mcp_config.router)  # MCP y CLI configuration
 app.include_router(backups.router, prefix="/backups", tags=["backups"])
+app.include_router(audit_logs.router)  # Audit logs
 
 
 @app.get("/")

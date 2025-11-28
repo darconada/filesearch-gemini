@@ -83,11 +83,20 @@ Esta aplicación usa el **SDK oficial `google-genai`** (v1.6.1+). El SDK anterio
   - Activación rápida entre proyectos
   - Ver [MULTI_PROJECT.md](MULTI_PROJECT.md) para más detalles
 
+- **🆕 Sincronización de Archivos Locales**
+  - Vinculación de archivos locales del servidor a File Search stores
+  - **Metadata personalizada**: Añade hasta 20 pares key-value a cada archivo
+  - **Asociación a proyectos**: Archivos vinculados automáticamente al proyecto activo
+  - **Filtrado automático**: Solo se muestran archivos del proyecto activo
+  - **Detección de cambios**: Sincronización automática basada en hash SHA256
+  - **Auto-sync scheduler**: Sincronización automática cada 3 minutos
+  - **Versionado de archivos**: Historial completo de actualizaciones
+  - **Recarga automática**: La lista se actualiza al cambiar de proyecto
+
 - **Base para Sincronización con Google Drive**
   - Modelos de datos preparados con persistencia en SQLite
   - Endpoints stub implementados
   - UI para configurar vínculos Drive → File Search
-  - Columna de proyecto para identificar origen de archivos
   - Estructura para sincronización manual/automática
 
 - **🆕 Navegador de Archivos del Servidor**

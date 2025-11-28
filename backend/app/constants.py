@@ -30,7 +30,7 @@ AVAILABLE_MODELS = [
 ]
 
 # Modelo por defecto si no se especifica
-DEFAULT_MODEL = "gemini-2.5-flash"
+DEFAULT_MODEL = "gemini-2.5-pro"
 
 # IDs de modelos (para validación)
 MODEL_IDS = [model["id"] for model in AVAILABLE_MODELS]

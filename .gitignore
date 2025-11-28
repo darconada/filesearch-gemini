@@ -34,6 +34,10 @@ backend/credentials.json
 token.json
 backend/token.json
 
+# Encryption key (NEVER commit this!)
+.encryption_key
+backend/.encryption_key
+
 # IDE
 .vscode/
 .idea/

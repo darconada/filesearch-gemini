@@ -28,13 +28,14 @@ import {
   MenuItem,
 } from '@mui/material';
 import { Add, Delete, Sync, Upload, History, FolderOpen } from '@mui/icons-material';
-import { localFilesApi, storesApi, fileUpdatesApi } from '@/services/api';
-import type { LocalFileLink, Store, FileVersionHistory } from '@/types';
+import { localFilesApi, storesApi, fileUpdatesApi, projectsApi } from '@/services/api';
+import type { LocalFileLink, Store, FileVersionHistory, Project } from '@/types';
 import FileBrowserDialog from './FileBrowserDialog';
 
 const LocalFilesPage: React.FC = () => {
   const [links, setLinks] = useState<LocalFileLink[]>([]);
   const [stores, setStores] = useState<Store[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(false);
   const [openCreate, setOpenCreate] = useState(false);
   const [openReplace, setOpenReplace] = useState(false);
@@ -47,20 +48,37 @@ const LocalFilesPage: React.FC = () => {
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [openFileBrowser, setOpenFileBrowser] = useState(false);
+  const [metadata, setMetadata] = useState<Record<string, any>>({});
+  const [metadataKey, setMetadataKey] = useState('');
+  const [metadataValue, setMetadataValue] = useState('');
 
   useEffect(() => {
     loadData();
+
+    // Listen for project changes
+    const handleProjectChanged = () => {
+      console.log('LocalFilesPage: Active project changed, reloading data...');
+      loadData();
+    };
+
+    window.addEventListener('activeProjectChanged', handleProjectChanged);
+
+    return () => {
+      window.removeEventListener('activeProjectChanged', handleProjectChanged);
+    };
   }, []);
 
   const loadData = async () => {
     setLoading(true);
     try {
-      const [linksResponse, storesResponse] = await Promise.all([
+      const [linksResponse, storesResponse, projectsResponse] = await Promise.all([
         localFilesApi.list(),
         storesApi.list(),
+        projectsApi.list(),
       ]);
       setLinks(linksResponse.links);
       setStores(storesResponse.stores);
+      setProjects(projectsResponse.projects);
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Error loading data');
     } finally {
@@ -78,17 +96,40 @@ const LocalFilesPage: React.FC = () => {
       await localFilesApi.create({
         local_file_path: filePath,
         store_id: selectedStoreId,
+        metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
       });
 
       setOpenCreate(false);
       setFilePath('');
       setSelectedStoreId('');
+      setMetadata({});
+      setMetadataKey('');
+      setMetadataValue('');
       await loadData();
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Error creating link');
     } finally {
       setCreating(false);
     }
+  };
+
+  const handleAddMetadata = () => {
+    if (!metadataKey.trim() || !metadataValue.trim()) return;
+
+    setMetadata((prev) => ({
+      ...prev,
+      [metadataKey.trim()]: metadataValue.trim(),
+    }));
+    setMetadataKey('');
+    setMetadataValue('');
+  };
+
+  const handleRemoveMetadata = (key: string) => {
+    setMetadata((prev) => {
+      const updated = { ...prev };
+      delete updated[key];
+      return updated;
+    });
   };
 
   const handleDelete = async (linkId: string) => {
@@ -145,6 +186,12 @@ const LocalFilesPage: React.FC = () => {
     return store ? store.display_name : storeId;
   };
 
+  const getProjectName = (projectId?: number) => {
+    if (!projectId) return '-';
+    const project = projects.find((p) => p.id === projectId);
+    return project ? project.name : `Project ${projectId}`;
+  };
+
   const handleFileBrowserSelect = (path: string) => {
     setFilePath(path);
     setOpenFileBrowser(false);
@@ -189,6 +236,8 @@ const LocalFilesPage: React.FC = () => {
                 <TableCell>File Name</TableCell>
                 <TableCell>Path</TableCell>
                 <TableCell>Store</TableCell>
+                <TableCell>Project</TableCell>
+                <TableCell>Metadata</TableCell>
                 <TableCell>Size</TableCell>
                 <TableCell>Version</TableCell>
                 <TableCell>Status</TableCell>
@@ -199,7 +248,7 @@ const LocalFilesPage: React.FC = () => {
             <TableBody>
               {links.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} align="center">
+                  <TableCell colSpan={10} align="center">
                     <Typography color="text.secondary">No local files configured</Typography>
                   </TableCell>
                 </TableRow>
@@ -211,6 +260,41 @@ const LocalFilesPage: React.FC = () => {
                       {link.local_file_path}
                     </TableCell>
                     <TableCell>{getStoreDisplayName(link.store_id)}</TableCell>
+                    <TableCell>
+                      <Chip
+                        label={getProjectName(link.project_id)}
+                        size="small"
+                        color="secondary"
+                        variant="outlined"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      {link.custom_metadata && Object.keys(link.custom_metadata).length > 0 ? (
+                        <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                          {Object.entries(link.custom_metadata).slice(0, 2).map(([key, value]) => (
+                            <Chip
+                              key={key}
+                              label={`${key}: ${value}`}
+                              size="small"
+                              variant="outlined"
+                              sx={{ fontSize: '0.7rem' }}
+                            />
+                          ))}
+                          {Object.keys(link.custom_metadata).length > 2 && (
+                            <Chip
+                              label={`+${Object.keys(link.custom_metadata).length - 2}`}
+                              size="small"
+                              variant="outlined"
+                              sx={{ fontSize: '0.7rem' }}
+                            />
+                          )}
+                        </Box>
+                      ) : (
+                        <Typography variant="body2" color="text.secondary">
+                          -
+                        </Typography>
+                      )}
+                    </TableCell>
                     <TableCell>{formatFileSize(link.file_size)}</TableCell>
                     <TableCell>
                       <Chip label={`v${link.version}`} size="small" color="primary" />
@@ -294,6 +378,46 @@ const LocalFilesPage: React.FC = () => {
               ))}
             </Select>
           </FormControl>
+
+          <Typography variant="subtitle2" sx={{ mt: 2, mb: 1 }}>
+            Metadata (Optional)
+          </Typography>
+          <Box display="flex" gap={1} alignItems="flex-start">
+            <TextField
+              label="Key"
+              value={metadataKey}
+              onChange={(e) => setMetadataKey(e.target.value)}
+              size="small"
+              sx={{ flex: 1 }}
+            />
+            <TextField
+              label="Value"
+              value={metadataValue}
+              onChange={(e) => setMetadataValue(e.target.value)}
+              size="small"
+              sx={{ flex: 1 }}
+            />
+            <Button
+              variant="outlined"
+              onClick={handleAddMetadata}
+              disabled={!metadataKey.trim() || !metadataValue.trim()}
+              sx={{ minWidth: 'auto' }}
+            >
+              Add
+            </Button>
+          </Box>
+          {Object.keys(metadata).length > 0 && (
+            <Box sx={{ mt: 1, display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+              {Object.entries(metadata).map(([key, value]) => (
+                <Chip
+                  key={key}
+                  label={`${key}: ${value}`}
+                  onDelete={() => handleRemoveMetadata(key)}
+                  size="small"
+                />
+              ))}
+            </Box>
+          )}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenCreate(false)}>Cancel</Button>
