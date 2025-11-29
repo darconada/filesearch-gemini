@@ -56,6 +56,7 @@ const DrivePage: React.FC = () => {
   const [syncInterval, setSyncInterval] = useState('60');
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -318,7 +319,12 @@ const DrivePage: React.FC = () => {
       )}
 
       {/* Create Link Dialog */}
-      <Dialog open={openCreate} onClose={() => !creating && setOpenCreate(false)} maxWidth="sm" fullWidth>
+      <Dialog
+        open={openCreate}
+        onClose={() => !creating && !isPickerOpen && setOpenCreate(false)}
+        maxWidth="sm"
+        fullWidth
+      >
         <DialogTitle>Add Drive Link</DialogTitle>
         <DialogContent>
           <Box sx={{ mt: 2 }}>
@@ -334,6 +340,8 @@ const DrivePage: React.FC = () => {
               />
               <DriveFilePicker
                 onFileSelect={handleDriveFileSelect}
+                onPickerOpen={() => setIsPickerOpen(true)}
+                onPickerClose={() => setIsPickerOpen(false)}
                 disabled={creating}
               />
             </Box>

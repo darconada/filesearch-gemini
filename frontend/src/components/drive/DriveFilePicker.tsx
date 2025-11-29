@@ -23,6 +23,8 @@ interface DriveFile {
 
 interface DriveFilePickerProps {
   onFileSelect: (file: DriveFile) => void;
+  onPickerOpen?: () => void;
+  onPickerClose?: () => void;
   disabled?: boolean;
 }
 
@@ -31,7 +33,7 @@ interface DriveFilePickerProps {
 const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || '';
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
-export default function DriveFilePicker({ onFileSelect, disabled = false }: DriveFilePickerProps) {
+export default function DriveFilePicker({ onFileSelect, onPickerOpen, onPickerClose, disabled = false }: DriveFilePickerProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pickerApiLoaded, setPickerApiLoaded] = useState(false);
@@ -118,10 +120,20 @@ export default function DriveFilePicker({ onFileSelect, disabled = false }: Driv
               name: file.name,
               mimeType: file.mimeType,
             });
+
+            // Notify that picker is closing
+            if (onPickerClose) {
+              onPickerClose();
+            }
           }
           // Handle cancel/close action
           if (data.action === window.google.picker.Action.CANCEL) {
             console.log('Picker was closed/cancelled');
+
+            // Notify that picker is closing
+            if (onPickerClose) {
+              onPickerClose();
+            }
           }
         })
         // Appearance and controls
@@ -134,6 +146,11 @@ export default function DriveFilePicker({ onFileSelect, disabled = false }: Driv
       }
 
       const picker = pickerBuilder.build();
+
+      // Notify that picker is opening
+      if (onPickerOpen) {
+        onPickerOpen();
+      }
 
       // 4. Show the picker
       picker.setVisible(true);
