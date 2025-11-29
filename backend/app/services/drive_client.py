@@ -188,6 +188,37 @@ class DriveClient:
             logger.error(f"Drive connection test failed: {e}")
             return False, str(e)
 
+    def get_access_token(self) -> Optional[str]:
+        """
+        Obtener el access token actual para usar en Google Picker API
+
+        Returns:
+            Access token string o None si no está configurado
+        """
+        try:
+            if not self.is_configured():
+                if not self.configure():
+                    logger.error("Cannot get access token: Drive client not configured")
+                    return None
+
+            if not self._credentials:
+                logger.error("No credentials available")
+                return None
+
+            # Refrescar el token si está expirado
+            if self._credentials.expired and self._credentials.refresh_token:
+                try:
+                    self._credentials.refresh(Request())
+                    logger.info("Refreshed credentials for access token")
+                except Exception as e:
+                    logger.error(f"Error refreshing credentials: {e}")
+                    return None
+
+            return self._credentials.token
+        except Exception as e:
+            logger.error(f"Error getting access token: {e}")
+            return None
+
 
 # Instancia global del cliente
 drive_client = DriveClient()

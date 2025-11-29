@@ -73,3 +73,36 @@ async def sync_drive_link(link_id: str, sync_request: DriveSyncRequest, db: Sess
     except Exception as e:
         logger.error(f"Error in sync_drive_link endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/oauth-token")
+async def get_oauth_token() -> dict:
+    """
+    Obtener el access token de OAuth para usar con Google Picker API
+
+    Este endpoint devuelve el access token actual de Drive OAuth que puede
+    ser usado en el frontend para abrir el Google Picker.
+
+    Returns:
+        dict con access_token y expires_in
+    """
+    try:
+        from app.services.drive_client import drive_client
+
+        token = drive_client.get_access_token()
+
+        if not token:
+            raise HTTPException(
+                status_code=401,
+                detail="No valid Drive credentials. Please configure Drive OAuth first."
+            )
+
+        return {
+            "access_token": token,
+            "expires_in": 3600  # Google tokens typically last 1 hour
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting OAuth token: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

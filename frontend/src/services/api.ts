@@ -233,6 +233,11 @@ export const driveApi = {
     const response = await api.post(`/drive-links/${linkId}/sync-now`, { force });
     return response.data;
   },
+
+  getOAuthToken: async (): Promise<{ access_token: string; expires_in: number }> => {
+    const response = await api.get('/drive-links/oauth-token');
+    return response.data;
+  },
 };
 
 // MCP Server API

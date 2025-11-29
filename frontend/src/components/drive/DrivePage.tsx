@@ -36,6 +36,7 @@ import { Tooltip } from '@mui/material';
 import { driveApi, storesApi, fileUpdatesApi, projectsApi } from '@/services/api';
 import type { DriveLink, Store, FileVersionHistory, Project } from '@/types';
 import { SyncMode } from '@/types';
+import DriveFilePicker from './DriveFilePicker';
 
 const DrivePage: React.FC = () => {
   const [links, setLinks] = useState<DriveLink[]>([]);
@@ -46,6 +47,7 @@ const DrivePage: React.FC = () => {
   const [openReplace, setOpenReplace] = useState(false);
   const [openHistory, setOpenHistory] = useState(false);
   const [driveFileId, setDriveFileId] = useState('');
+  const [driveFileName, setDriveFileName] = useState('');
   const [selectedStoreId, setSelectedStoreId] = useState('');
   const [selectedLinkId, setSelectedLinkId] = useState('');
   const [replaceFile, setReplaceFile] = useState<File | null>(null);
@@ -108,6 +110,7 @@ const DrivePage: React.FC = () => {
 
       setOpenCreate(false);
       setDriveFileId('');
+      setDriveFileName('');
       setSelectedStoreId('');
       setSyncMode(SyncMode.MANUAL);
       setSyncInterval('60');
@@ -166,6 +169,11 @@ const DrivePage: React.FC = () => {
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Error loading history');
     }
+  };
+
+  const handleDriveFileSelect = (file: { id: string; name: string }) => {
+    setDriveFileId(file.id);
+    setDriveFileName(file.name);
   };
 
   const getStoreDisplayName = (storeId: string) => {
@@ -312,14 +320,20 @@ const DrivePage: React.FC = () => {
         <DialogTitle>Add Drive Link</DialogTitle>
         <DialogContent>
           <Box sx={{ mt: 2 }}>
-            <TextField
-              fullWidth
-              label="Drive File ID"
-              value={driveFileId}
-              onChange={(e) => setDriveFileId(e.target.value)}
-              placeholder="Enter Google Drive file ID"
-              sx={{ mb: 2 }}
-            />
+            <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start', mb: 2 }}>
+              <TextField
+                fullWidth
+                label="Drive File ID"
+                value={driveFileId}
+                onChange={(e) => setDriveFileId(e.target.value)}
+                placeholder="Enter manually or browse Drive"
+                helperText={driveFileName || "File ID from Google Drive"}
+              />
+              <DriveFilePicker
+                onFileSelect={handleDriveFileSelect}
+                disabled={creating}
+              />
+            </Box>
 
             <FormControl fullWidth sx={{ mb: 2 }}>
               <InputLabel>Destination Store</InputLabel>
