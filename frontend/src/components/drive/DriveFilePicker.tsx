@@ -102,8 +102,17 @@ export default function DriveFilePicker({ onFileSelect, disabled = false }: Driv
         .setOAuthToken(access_token)
         // Set callback
         .setCallback((data: any) => {
+          console.log('Picker callback triggered:', data);
+
           if (data.action === window.google.picker.Action.PICKED) {
+            console.log('File picked:', data.docs);
             const file = data.docs[0];
+            console.log('Selected file details:', {
+              id: file.id,
+              name: file.name,
+              mimeType: file.mimeType
+            });
+
             onFileSelect({
               id: file.id,
               name: file.name,

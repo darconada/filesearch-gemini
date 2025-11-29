@@ -172,8 +172,10 @@ const DrivePage: React.FC = () => {
   };
 
   const handleDriveFileSelect = (file: { id: string; name: string }) => {
+    console.log('DrivePage received file selection:', file);
     setDriveFileId(file.id);
     setDriveFileName(file.name);
+    console.log('Updated state - File ID:', file.id, 'File Name:', file.name);
   };
 
   const getStoreDisplayName = (storeId: string) => {
