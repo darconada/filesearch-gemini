@@ -330,12 +330,23 @@ const DrivePage: React.FC = () => {
                 onChange={(e) => setDriveFileId(e.target.value)}
                 placeholder="Enter manually or browse Drive"
                 helperText={driveFileName || "File ID from Google Drive"}
+                onFocus={() => console.log('TextField focused - current value:', driveFileId)}
               />
               <DriveFilePicker
                 onFileSelect={handleDriveFileSelect}
                 disabled={creating}
               />
             </Box>
+            {driveFileId && (
+              <Box sx={{ mb: 2, p: 1, bgcolor: 'success.light', borderRadius: 1 }}>
+                <Typography variant="caption" display="block">
+                  ✓ File ID: {driveFileId}
+                </Typography>
+                <Typography variant="caption" display="block">
+                  ✓ File Name: {driveFileName}
+                </Typography>
+              </Box>
+            )}
 
             <FormControl fullWidth sx={{ mb: 2 }}>
               <InputLabel>Destination Store</InputLabel>
