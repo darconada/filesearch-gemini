@@ -92,7 +92,7 @@ export default function DriveFilePicker({ onFileSelect, disabled = false }: Driv
       const { access_token } = await driveApi.getOAuthToken();
 
       // 3. Create the picker
-      const picker = new window.google.picker.PickerBuilder()
+      const pickerBuilder = new window.google.picker.PickerBuilder()
         // Add different views
         .addView(window.google.picker.ViewId.DOCS) // All documents
         .addView(new window.google.picker.DocsView()
@@ -100,8 +100,6 @@ export default function DriveFilePicker({ onFileSelect, disabled = false }: Driv
           .setMode(window.google.picker.DocsViewMode.LIST))
         // Set OAuth token
         .setOAuthToken(access_token)
-        // Set API key if available
-        .setDeveloperKey(GOOGLE_API_KEY || undefined)
         // Set callback
         .setCallback((data: any) => {
           if (data.action === window.google.picker.Action.PICKED) {
@@ -112,11 +110,21 @@ export default function DriveFilePicker({ onFileSelect, disabled = false }: Driv
               mimeType: file.mimeType,
             });
           }
+          // Handle cancel/close action
+          if (data.action === window.google.picker.Action.CANCEL) {
+            console.log('Picker was closed/cancelled');
+          }
         })
-        // Appearance
+        // Appearance and controls
         .setTitle('Select a file from Google Drive')
-        .setSize(800, 600)
-        .build();
+        .setSize(800, 600);
+
+      // Only set API key if it's actually configured
+      if (GOOGLE_API_KEY && GOOGLE_API_KEY.trim()) {
+        pickerBuilder.setDeveloperKey(GOOGLE_API_KEY);
+      }
+
+      const picker = pickerBuilder.build();
 
       // 4. Show the picker
       picker.setVisible(true);
