@@ -147,6 +147,23 @@ export default function DriveFilePicker({ onFileSelect, onPickerOpen, onPickerCl
 
       const picker = pickerBuilder.build();
 
+      // Add CSS to ensure picker appears above Material-UI dialogs
+      // Material-UI dialogs use z-index 1300, so we set picker to 1400
+      const styleId = 'google-picker-z-index-fix';
+      if (!document.getElementById(styleId)) {
+        const style = document.createElement('style');
+        style.id = styleId;
+        style.innerHTML = `
+          .picker-dialog {
+            z-index: 1400 !important;
+          }
+          .picker-dialog-bg {
+            z-index: 1399 !important;
+          }
+        `;
+        document.head.appendChild(style);
+      }
+
       // Notify that picker is opening
       if (onPickerOpen) {
         onPickerOpen();
