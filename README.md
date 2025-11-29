@@ -96,8 +96,9 @@ Esta aplicación usa el **SDK oficial `google-genai`** (v1.6.1+). El SDK anterio
 - **🆕 Sincronización con Google Drive**
   - Modelos de datos preparados con persistencia en SQLite
   - Endpoints implementados para gestión de links
-  - **Google Picker API**: Selecciona archivos de Drive visualmente desde la UI
-  - Navegador de archivos integrado en el diálogo de creación
+  - **✅ Google Picker API**: Selecciona archivos de Drive visualmente desde la UI (100% funcional)
+  - Navegador de archivos integrado en el diálogo de creación con botón "Browse Drive"
+  - Auto-rellenado del File ID y nombre del archivo al seleccionar
   - UI completa para configurar vínculos Drive → File Search
   - Estructura para sincronización manual/automática
   - Ver [GOOGLE_PICKER_SETUP.md](GOOGLE_PICKER_SETUP.md) para configuración

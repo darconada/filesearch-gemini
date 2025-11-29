@@ -2,6 +2,17 @@
 
 Esta guía explica cómo configurar Google Picker API para permitir seleccionar archivos de Google Drive directamente desde la UI.
 
+## ✅ Estado de la Implementación
+
+**Completado y funcionando** - La integración de Google Picker está 100% operativa:
+
+- ✅ Botón "Browse Drive" en el diálogo "Add Drive Link"
+- ✅ Selección visual de archivos desde Google Drive
+- ✅ Auto-rellenado del File ID y nombre del archivo
+- ✅ Compatibilidad con OAuth sin necesidad de API Key
+- ✅ Corrección de z-index para que el picker aparezca sobre el diálogo
+- ✅ Prevención de cierre accidental del diálogo al seleccionar archivos
+
 ## 📋 Requisitos Previos
 
 - Proyecto en Google Cloud Console
@@ -17,9 +28,9 @@ Esta guía explica cómo configurar Google Picker API para permitir seleccionar 
 4. Busca "Google Picker API"
 5. Haz clic en **Enable**
 
-### 2. Crear/Configurar API Key (Opcional pero Recomendado)
+### 2. Crear/Configurar API Key (Opcional)
 
-La API Key permite cargar el Picker sin restricciones adicionales.
+**Nota:** La API Key es completamente opcional. El picker funciona perfectamente usando solo el OAuth token del backend.
 
 1. Ve a **APIs & Services** > **Credentials**
 2. Haz clic en **+ CREATE CREDENTIALS** > **API key**
