@@ -1,8 +1,8 @@
 """Endpoints para gestión de documentos"""
-from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Query
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Query, Request
 from typing import Optional, Dict, Any
 from app.models.document import DocumentResponse, DocumentList, ChunkingConfig
-from app.services.document_service import document_service
+from app.services.document_service import document_service, DuplicateFileException
 import logging
 import json
 
@@ -14,18 +14,42 @@ router = APIRouter(tags=["documents"])
 
 @router.post("/stores/fileSearchStores/{store_id}/documents", response_model=DocumentResponse, status_code=201)
 async def upload_document(
+    request: Request,
     store_id: str,
     file: UploadFile = File(...),
     display_name: Optional[str] = Form(None),
     metadata: Optional[str] = Form(None),  # JSON string
     max_tokens_per_chunk: Optional[int] = Form(None),
-    max_overlap_tokens: Optional[int] = Form(None)
+    max_overlap_tokens: Optional[int] = Form(None),
+    force: bool = Form(False)  # Forzar subida aunque sea duplicado
 ) -> DocumentResponse:
-    """Subir un documento al store"""
+    """
+    Subir un documento al store con detección de duplicados
+
+    Args:
+        store_id: ID del store (sin prefijo fileSearchStores/)
+        file: Archivo a subir
+        display_name: Nombre para mostrar (opcional)
+        metadata: Metadata personalizada como JSON string (opcional)
+        max_tokens_per_chunk: Tamaño máximo de chunks (opcional)
+        max_overlap_tokens: Overlap entre chunks (opcional)
+        force: Si True, sube el archivo aunque sea duplicado (default: False)
+
+    Returns:
+        DocumentResponse con la información del documento subido
+
+    Raises:
+        HTTPException 409: Si el archivo es duplicado y force=False
+        HTTPException 400: Si la metadata es inválida
+        HTTPException 500: Si hay un error en el upload
+    """
     try:
         # Construir store_id completo
         full_store_id = f"fileSearchStores/{store_id}"
-        logger.info(f"upload_document: store_id='{full_store_id}'")
+        logger.info(f"upload_document: store_id='{full_store_id}', force={force}")
+
+        # Obtener IP del cliente para tracking
+        client_ip = request.client.host if request.client else "unknown"
 
         # Parsear metadata si se proporciona
         metadata_dict: Dict[str, Any] = {}
@@ -50,9 +74,29 @@ async def upload_document(
             filename=file.filename or "untitled",
             display_name=display_name,
             metadata=metadata_dict,
-            chunking_config=chunking_config
+            chunking_config=chunking_config,
+            force=force,
+            uploaded_by=client_ip
         )
 
+    except DuplicateFileException as dup_ex:
+        # Devolver error 409 (Conflict) con información del duplicado
+        logger.warning(f"Duplicate file upload attempt: {dup_ex.message}")
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "error": "duplicate_file",
+                "message": dup_ex.message,
+                "existing_document": {
+                    "id": dup_ex.existing_document.id,
+                    "document_id": dup_ex.existing_document.document_id,
+                    "filename": dup_ex.existing_document.filename,
+                    "display_name": dup_ex.existing_document.display_name,
+                    "uploaded_at": dup_ex.existing_document.uploaded_at.isoformat(),
+                    "file_size": dup_ex.existing_document.file_size,
+                }
+            }
+        )
     except HTTPException:
         raise
     except Exception as e:

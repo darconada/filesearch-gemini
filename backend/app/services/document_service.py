@@ -2,11 +2,24 @@
 from typing import Optional, BinaryIO, Dict, Any
 from app.models.document import DocumentResponse, DocumentList, ChunkingConfig
 from app.services.google_client import google_client
+from app.models.db_models import DocumentDB
+from app.database import SessionLocal
 import logging
 import tempfile
 from pathlib import Path
+import hashlib
+import uuid
+import os
 
 logger = logging.getLogger(__name__)
+
+
+class DuplicateFileException(Exception):
+    """Exception raised when a duplicate file is detected"""
+    def __init__(self, message: str, existing_document: DocumentDB):
+        self.message = message
+        self.existing_document = existing_document
+        super().__init__(self.message)
 
 
 class DocumentService:
@@ -14,6 +27,58 @@ class DocumentService:
 
     def __init__(self):
         self.google_client = google_client
+
+    def _calculate_file_hash(self, file_content: BinaryIO) -> str:
+        """
+        Calcular SHA256 hash del contenido del archivo
+
+        Args:
+            file_content: Binary file object
+
+        Returns:
+            SHA256 hash como string hexadecimal
+        """
+        sha256_hash = hashlib.sha256()
+
+        # Guardar posición actual
+        original_position = file_content.tell() if hasattr(file_content, 'tell') else 0
+
+        # Resetear al inicio
+        if hasattr(file_content, 'seek'):
+            file_content.seek(0)
+
+        # Leer en chunks para archivos grandes
+        if hasattr(file_content, 'read'):
+            for byte_block in iter(lambda: file_content.read(4096), b""):
+                sha256_hash.update(byte_block)
+        else:
+            # Si es bytes directamente
+            sha256_hash.update(file_content)
+
+        # Restaurar posición original
+        if hasattr(file_content, 'seek'):
+            file_content.seek(original_position)
+
+        return sha256_hash.hexdigest()
+
+    def _check_duplicate(self, file_hash: str, store_id: str, db: SessionLocal) -> Optional[DocumentDB]:
+        """
+        Verificar si existe un documento duplicado en el store
+
+        Args:
+            file_hash: SHA256 hash del archivo
+            store_id: ID del store donde buscar
+            db: Sesión de base de datos
+
+        Returns:
+            DocumentDB si existe duplicado, None si no existe
+        """
+        existing = db.query(DocumentDB).filter(
+            DocumentDB.file_hash == file_hash,
+            DocumentDB.store_id == store_id
+        ).first()
+
+        return existing
 
     def _convert_metadata_to_google_format(self, metadata: Dict[str, Any]) -> list:
         """
@@ -122,17 +187,61 @@ class DocumentService:
         filename: str,
         display_name: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
-        chunking_config: Optional[ChunkingConfig] = None
+        chunking_config: Optional[ChunkingConfig] = None,
+        force: bool = False,
+        project_id: Optional[int] = None,
+        uploaded_by: Optional[str] = None
     ) -> DocumentResponse:
-        """Subir un documento al store"""
+        """
+        Subir un documento al store con detección de duplicados
+
+        Args:
+            store_id: ID del store donde subir el documento
+            file_content: Contenido del archivo
+            filename: Nombre del archivo
+            display_name: Nombre para mostrar (opcional)
+            metadata: Metadata personalizada (opcional)
+            chunking_config: Configuración de chunking (opcional)
+            force: Si True, sube el archivo aunque sea duplicado (default: False)
+            project_id: ID del proyecto asociado (opcional)
+            uploaded_by: Identificador del usuario/IP que sube el archivo (opcional)
+
+        Returns:
+            DocumentResponse con la información del documento subido
+
+        Raises:
+            DuplicateFileException: Si el archivo es duplicado y force=False
+        """
+        db = SessionLocal()
+
         try:
+            # 1. Calcular hash del archivo para detección de duplicados
+            logger.info(f"Calculating hash for {filename}")
+            file_hash = self._calculate_file_hash(file_content)
+            logger.info(f"File hash: {file_hash}")
+
+            # 2. Verificar duplicados si force=False
+            if not force:
+                existing = self._check_duplicate(file_hash, store_id, db)
+                if existing:
+                    logger.warning(
+                        f"Duplicate file detected: {filename} "
+                        f"matches existing document '{existing.display_name or existing.filename}' "
+                        f"(uploaded {existing.uploaded_at})"
+                    )
+                    raise DuplicateFileException(
+                        f"This file already exists in the store as '{existing.display_name or existing.filename}' "
+                        f"(uploaded on {existing.uploaded_at.strftime('%Y-%m-%d %H:%M:%S')})",
+                        existing
+                    )
+
+            logger.info(f"No duplicate found, proceeding with upload of {filename}")
+
             client = self.google_client.get_client()
 
-            # Guardar el archivo temporalmente con el nombre original
+            # 3. Guardar el archivo temporalmente con el nombre original
             # Esto es importante porque Google File Search usa el nombre del archivo físico
             # Añadimos un UUID para evitar colisiones si múltiples usuarios suben archivos con el mismo nombre
-            import os
-            import uuid
             tmp_dir = tempfile.gettempdir()
             unique_dir = os.path.join(tmp_dir, f"filesearch_{uuid.uuid4().hex[:8]}")
             os.makedirs(unique_dir, exist_ok=True)
@@ -248,7 +357,37 @@ class DocumentService:
 
                 logger.info(f"Document uploaded successfully: {file_obj.name}")
 
-                # Convertir respuesta
+                # 4. Guardar en base de datos local para tracking de duplicados
+                try:
+                    # Obtener tamaño del archivo temporal
+                    file_size = Path(tmp_path).stat().st_size if Path(tmp_path).exists() else None
+
+                    doc_db = DocumentDB(
+                        id=str(uuid.uuid4()),
+                        document_id=file_obj.name,
+                        store_id=store_id,
+                        project_id=project_id,
+                        filename=filename,
+                        display_name=display_name or filename,
+                        file_hash=file_hash,
+                        file_size=file_size,
+                        mime_type=getattr(file_obj, 'mime_type', None),
+                        custom_metadata=metadata,
+                        max_tokens_per_chunk=chunking_config.max_tokens_per_chunk if chunking_config else None,
+                        max_overlap_tokens=chunking_config.max_overlap_tokens if chunking_config else None,
+                        uploaded_by=uploaded_by
+                    )
+
+                    db.add(doc_db)
+                    db.commit()
+                    logger.info(f"Document tracked in database: {doc_db.id}")
+
+                except Exception as db_error:
+                    logger.error(f"Error saving document to database: {db_error}")
+                    # No fallar el upload por error de BD, pero loguear
+                    db.rollback()
+
+                # 5. Convertir respuesta
                 return DocumentResponse(
                     name=file_obj.name,
                     display_name=file_obj.display_name or filename,
@@ -268,9 +407,15 @@ class DocumentService:
                 except:
                     pass  # Ignorar si el directorio no está vacío o no existe
 
+        except DuplicateFileException:
+            # Re-raise duplicate exceptions sin modificar
+            raise
         except Exception as e:
             logger.error(f"Error uploading document: {e}")
             raise
+        finally:
+            # Cerrar sesión de base de datos
+            db.close()
 
     def list_documents(
         self,

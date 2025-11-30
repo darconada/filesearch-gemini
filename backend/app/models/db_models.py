@@ -121,6 +121,36 @@ class LocalFileLinkDB(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
 
+class DocumentDB(Base):
+    """Modelo de base de datos para documentos subidos directamente a File Search"""
+    __tablename__ = "documents"
+
+    id = Column(String, primary_key=True, index=True)  # UUID generado localmente
+    document_id = Column(String, unique=True, nullable=False, index=True)  # ID de Google File Search (fileSearchDocuments/xxx)
+    store_id = Column(String, nullable=False, index=True)  # Store donde está el documento
+    project_id = Column(Integer, nullable=True, index=True)  # Proyecto asociado
+
+    # File information
+    filename = Column(String, nullable=False)  # Nombre original del archivo
+    display_name = Column(String, nullable=True)  # Nombre para mostrar (opcional)
+    file_hash = Column(String, nullable=False, index=True)  # SHA256 para detección de duplicados
+    file_size = Column(Integer, nullable=True)  # Tamaño en bytes
+    mime_type = Column(String, nullable=True)  # Tipo MIME
+
+    # Metadata
+    custom_metadata = Column(JSON, nullable=True)  # Metadata personalizada del usuario
+
+    # Chunking configuration (guardado para referencia)
+    max_tokens_per_chunk = Column(Integer, nullable=True)
+    max_overlap_tokens = Column(Integer, nullable=True)
+
+    # Tracking
+    uploaded_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
+    uploaded_by = Column(String, nullable=True)  # IP o user_id (para cuando implementes auth)
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
 
 class AuditLogDB(Base):
     """Modelo de base de datos para audit logs"""
