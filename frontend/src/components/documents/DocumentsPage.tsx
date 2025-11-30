@@ -389,7 +389,7 @@ const DocumentsPage: React.FC = () => {
           <Button onClick={() => setOpenUpload(false)} disabled={uploading}>
             Cancel
           </Button>
-          <Button onClick={handleUpload} variant="contained" disabled={uploading || !selectedFile}>
+          <Button onClick={() => handleUpload(false)} variant="contained" disabled={uploading || !selectedFile}>
             {uploading ? <CircularProgress size={24} /> : 'Upload'}
           </Button>
         </DialogActions>
