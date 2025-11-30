@@ -148,7 +148,8 @@ export const documentsApi = {
     file: File,
     displayName?: string,
     metadata?: Record<string, any>,
-    chunkingConfig?: { max_tokens_per_chunk?: number; max_overlap_tokens?: number }
+    chunkingConfig?: { max_tokens_per_chunk?: number; max_overlap_tokens?: number },
+    force?: boolean
   ): Promise<Document> => {
     const formData = new FormData();
     formData.append('file', file);
@@ -159,6 +160,9 @@ export const documentsApi = {
     }
     if (chunkingConfig?.max_overlap_tokens) {
       formData.append('max_overlap_tokens', chunkingConfig.max_overlap_tokens.toString());
+    }
+    if (force) {
+      formData.append('force', 'true');
     }
 
     // Extract just the store ID part

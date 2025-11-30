@@ -50,6 +50,8 @@ const DocumentsPage: React.FC = () => {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeStoreId, setActiveStoreId] = useState<string | null>(null);
+  const [duplicateInfo, setDuplicateInfo] = useState<any | null>(null);
+  const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
 
   useEffect(() => {
     console.log('DocumentsPage: useEffect mounting, setting up event listeners');
@@ -142,7 +144,7 @@ const DocumentsPage: React.FC = () => {
     setMetadata(newMetadata);
   };
 
-  const handleUpload = async () => {
+  const handleUpload = async (force = false) => {
     if (!selectedFile || !activeStoreId) return;
 
     setUploading(true);
@@ -167,11 +169,14 @@ const DocumentsPage: React.FC = () => {
         selectedFile,
         displayName || undefined,
         Object.keys(metadataObj).length > 0 ? metadataObj : undefined,
-        Object.keys(chunkingConfig).length > 0 ? chunkingConfig : undefined
+        Object.keys(chunkingConfig).length > 0 ? chunkingConfig : undefined,
+        force  // Pass force parameter
       );
 
       // Reset form
       setOpenUpload(false);
+      setShowDuplicateDialog(false);
+      setDuplicateInfo(null);
       setSelectedFile(null);
       setDisplayName('');
       setMetadata([]);
@@ -181,10 +186,32 @@ const DocumentsPage: React.FC = () => {
 
       await loadDocuments(activeStoreId);
     } catch (err: any) {
+      // Check if it's a duplicate file error (409 Conflict)
+      if (err.response?.status === 409) {
+        const duplicateData = err.response?.data?.detail;
+        if (duplicateData && duplicateData.error === 'duplicate_file') {
+          setDuplicateInfo(duplicateData);
+          setShowDuplicateDialog(true);
+          setUploading(false);
+          return; // Don't show error, show duplicate dialog instead
+        }
+      }
+
       setError(err.response?.data?.detail || 'Error uploading document');
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleForceUpload = async () => {
+    setShowDuplicateDialog(false);
+    await handleUpload(true); // Retry with force=true
+  };
+
+  const handleCancelDuplicate = () => {
+    setShowDuplicateDialog(false);
+    setDuplicateInfo(null);
+    setUploading(false);
   };
 
   const handleDelete = async (documentId: string) => {
@@ -364,6 +391,80 @@ const DocumentsPage: React.FC = () => {
           </Button>
           <Button onClick={handleUpload} variant="contained" disabled={uploading || !selectedFile}>
             {uploading ? <CircularProgress size={24} /> : 'Upload'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Duplicate File Warning Dialog */}
+      <Dialog
+        open={showDuplicateDialog}
+        onClose={() => !uploading && handleCancelDuplicate()}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle sx={{ bgcolor: 'warning.light', color: 'warning.contrastText' }}>
+          ⚠️ Duplicate File Detected
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ mt: 2 }}>
+            <Alert severity="warning" sx={{ mb: 2 }}>
+              {duplicateInfo?.message || 'This file already exists in the store.'}
+            </Alert>
+
+            {duplicateInfo?.existing_document && (
+              <Box sx={{ bgcolor: 'grey.50', p: 2, borderRadius: 1 }}>
+                <Typography variant="subtitle2" gutterBottom>
+                  Existing Document Information:
+                </Typography>
+                <Box sx={{ ml: 2 }}>
+                  <Typography variant="body2">
+                    <strong>Filename:</strong> {duplicateInfo.existing_document.filename}
+                  </Typography>
+                  {duplicateInfo.existing_document.display_name && (
+                    <Typography variant="body2">
+                      <strong>Display Name:</strong> {duplicateInfo.existing_document.display_name}
+                    </Typography>
+                  )}
+                  <Typography variant="body2">
+                    <strong>Uploaded:</strong>{' '}
+                    {new Date(duplicateInfo.existing_document.uploaded_at).toLocaleString()}
+                  </Typography>
+                  {duplicateInfo.existing_document.file_size && (
+                    <Typography variant="body2">
+                      <strong>Size:</strong>{' '}
+                      {(duplicateInfo.existing_document.file_size / 1024).toFixed(2)} KB
+                    </Typography>
+                  )}
+                </Box>
+              </Box>
+            )}
+
+            <Box sx={{ mt: 3 }}>
+              <Typography variant="body2" color="text.secondary">
+                What would you like to do?
+              </Typography>
+              <Box component="ul" sx={{ mt: 1, ml: 2 }}>
+                <Typography component="li" variant="body2">
+                  <strong>Cancel:</strong> Don't upload this file
+                </Typography>
+                <Typography component="li" variant="body2">
+                  <strong>Upload Anyway:</strong> Create a duplicate copy in the store (not recommended)
+                </Typography>
+              </Box>
+            </Box>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCancelDuplicate} disabled={uploading}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleForceUpload}
+            variant="contained"
+            color="warning"
+            disabled={uploading}
+          >
+            {uploading ? <CircularProgress size={24} /> : 'Upload Anyway'}
           </Button>
         </DialogActions>
       </Dialog>
