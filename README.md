@@ -36,10 +36,11 @@ Esta aplicación usa el **SDK oficial `google-genai`** (v1.6.1+). El SDK anterio
 
 - **Gestión de Documentos**
   - Subida de documentos al File Search store
+  - **🆕 Detección de duplicados por SHA256**: Previene subidas duplicadas automáticamente
+  - **Advertencia de duplicados**: Diálogo interactivo con opción de forzar subida
+  - **Tracking completo**: Todos los documentos registrados en BD con hash, metadata y fecha
   - Listado paginado de documentos
   - Actualización de documentos (eliminar + recrear)
-  - Eliminación de documentos con forzado (force delete para documentos indexados)
-  - Preservación de nombres de archivo originales
   - Eliminación de documentos con forzado (force delete para documentos indexados)
   - Preservación de nombres de archivo originales
   - **Soporte completo para metadatos personalizados** (texto y numéricos)
@@ -119,7 +120,7 @@ backend/
 │   ├── config.py            # Configuración global
 │   ├── database.py          # SQLAlchemy setup
 │   ├── models/              # Modelos Pydantic y DB
-│   │   ├── db_models.py     # Modelos SQLAlchemy (ProjectDB, DriveLinkDB)
+│   │   ├── db_models.py     # Modelos SQLAlchemy (ProjectDB, DocumentDB, DriveLinkDB, LocalFileLinkDB)
 │   │   ├── store.py
 │   │   ├── document.py
 │   │   ├── query.py
