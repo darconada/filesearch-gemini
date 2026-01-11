@@ -1,254 +1,254 @@
 # Project Summary - File Search RAG Application
 
-## ✅ Implementación Completa
+## Complete Implementation
 
-Este proyecto implementa un sistema RAG completo basado en Google File Search con las siguientes características:
+This project implements a complete RAG system based on Google File Search with the following features:
 
 ### Backend (Python + FastAPI)
 
-#### Modelos Pydantic (/backend/app/models/)
-- ✅ `store.py` - Modelos para stores (StoreCreate, StoreResponse, StoreList)
-- ✅ `document.py` - Modelos para documentos con metadata y chunking config
-- ✅ `query.py` - Modelos para consultas RAG y respuestas con fuentes
-- ✅ `config.py` - Modelos para configuración de API key
-- ✅ `drive.py` - Modelos para sincronización Drive (base futura)
+#### Pydantic Models (/backend/app/models/)
+- `store.py` - Store models (StoreCreate, StoreResponse, StoreList)
+- `document.py` - Document models with metadata and chunking config
+- `query.py` - RAG query and response models with sources
+- `config.py` - API key configuration models
+- `drive.py` - Drive synchronization models (future base)
 
-#### Servicios (/backend/app/services/)
-- ✅ `google_client.py` - Cliente singleton para Google Generative AI
-- ✅ `store_service.py` - CRUD completo de stores
-- ✅ `document_service.py` - Gestión de documentos con metadata personalizada
-- ✅ `query_service.py` - Ejecución de consultas RAG con grounding
-- ✅ `drive_service.py` - Servicio stub para sincronización Drive
+#### Services (/backend/app/services/)
+- `google_client.py` - Singleton client for Google Generative AI
+- `store_service.py` - Complete store CRUD
+- `document_service.py` - Document management with custom metadata
+- `query_service.py` - RAG query execution with grounding
+- `drive_service.py` - Stub service for Drive synchronization
 
-#### API REST (/backend/app/api/)
-- ✅ `config.py` - Endpoints de configuración y validación
-- ✅ `stores.py` - Endpoints CRUD de stores
-- ✅ `documents.py` - Endpoints para upload/list/update/delete documentos
-- ✅ `query.py` - Endpoint de consulta RAG
-- ✅ `drive.py` - Endpoints stub para vínculos Drive
+#### REST API (/backend/app/api/)
+- `config.py` - Configuration and validation endpoints
+- `stores.py` - Store CRUD endpoints
+- `documents.py` - Document upload/list/update/delete endpoints
+- `query.py` - RAG query endpoint
+- `drive.py` - Stub endpoints for Drive links
 
-#### Características del Backend
-- ✅ Configuración centralizada con .env
-- ✅ Logging estructurado
-- ✅ Manejo robusto de errores
-- ✅ Documentación automática con Swagger/OpenAPI
-- ✅ CORS configurado para desarrollo local
-- ✅ Soporte multipart/form-data para uploads
-- ✅ Conversión de metadata bidireccional (simple ↔ Google format)
-- ✅ Validación con Pydantic
+#### Backend Features
+- Centralized configuration with .env
+- Structured logging
+- Robust error handling
+- Automatic documentation with Swagger/OpenAPI
+- CORS configured for local development
+- Multipart/form-data support for uploads
+- Bidirectional metadata conversion (simple <-> Google format)
+- Pydantic validation
 
 ### Frontend (React + TypeScript + Vite)
 
-#### Componentes UI (/frontend/src/components/)
+#### UI Components (/frontend/src/components/)
 
 **Common:**
-- ✅ `Layout.tsx` - Layout principal con navegación lateral y AppBar
+- `Layout.tsx` - Main layout with side navigation and AppBar
 
 **Config:**
-- ✅ `ConfigPage.tsx` - Configuración de API key y estado de conexión
+- `ConfigPage.tsx` - API key configuration and connection status
 
 **Stores:**
-- ✅ `StoresPage.tsx` - Gestión visual de stores con selección de activo
+- `StoresPage.tsx` - Visual store management with active selection
 
 **Documents:**
-- ✅ `DocumentsPage.tsx` - Upload con metadata, listado, eliminación
+- `DocumentsPage.tsx` - Upload with metadata, listing, deletion
 
 **Query:**
-- ✅ `QueryPage.tsx` - Interfaz de consultas RAG con multi-store y filtros
+- `QueryPage.tsx` - RAG query interface with multi-store and filters
 
 **Drive:**
-- ✅ `DrivePage.tsx` - UI para configurar vínculos Drive (stub)
+- `DrivePage.tsx` - UI for configuring Drive links (stub)
 
-#### Servicios y Tipos (/frontend/src/)
-- ✅ `services/api.ts` - Cliente HTTP completo con todos los endpoints
-- ✅ `types/index.ts` - Definiciones TypeScript completas
-- ✅ `theme/theme.ts` - Configuración de temas claro/oscuro
+#### Services and Types (/frontend/src/)
+- `services/api.ts` - Complete HTTP client with all endpoints
+- `types/index.ts` - Complete TypeScript definitions
+- `theme/theme.ts` - Light/dark theme configuration
 
-#### Características del Frontend
-- ✅ Navegación con React Router
-- ✅ Material-UI con temas claro/oscuro
-- ✅ Estado global con React Query
-- ✅ Formularios con validación
-- ✅ Feedback visual (loading, errores, éxitos)
-- ✅ Responsive design
-- ✅ TypeScript estricto
-- ✅ Persistencia de preferencias (theme, active store)
+#### Frontend Features
+- Navigation with React Router
+- Material-UI with light/dark themes
+- Global state with React Query
+- Forms with validation
+- Visual feedback (loading, errors, success)
+- Responsive design
+- Strict TypeScript
+- Preference persistence (theme, active store)
 
-## 📋 Checklist de Requisitos
+## Requirements Checklist
 
-### Funcionalidades Core
-- ✅ Gestión de File Search stores (crear, listar, eliminar)
-- ✅ Gestión de documentos con metadatos (hasta 20 pares clave/valor)
-- ✅ Upload de documentos con configuración de chunking
-- ✅ Actualización de documentos (delete + recreate)
-- ✅ Consultas RAG multi-store
-- ✅ Filtros por metadata en consultas
-- ✅ Respuestas con citas a documentos fuente
-- ✅ Extracción de grounding metadata
+### Core Features
+- File Search store management (create, list, delete)
+- Document management with metadata (up to 20 key/value pairs)
+- Document upload with chunking configuration
+- Document updates (delete + recreate)
+- Multi-store RAG queries
+- Metadata filters in queries
+- Responses with citations to source documents
+- Grounding metadata extraction
 
 ### UI/UX
-- ✅ Temas claro y oscuro
-- ✅ Navegación intuitiva
-- ✅ Formularios con validación
-- ✅ Manejo de estados (loading, error, success)
-- ✅ Diseño responsive
-- ✅ Selector de store activo
-- ✅ Visualización de metadatos
-- ✅ Opciones avanzadas colapsables
+- Light and dark themes
+- Intuitive navigation
+- Forms with validation
+- State handling (loading, error, success)
+- Responsive design
+- Active store selector
+- Metadata visualization
+- Collapsible advanced options
 
-### API REST
-- ✅ Endpoint de configuración con validación
-- ✅ CRUD completo de stores
-- ✅ CRUD completo de documentos
-- ✅ Endpoint de consulta RAG
-- ✅ Endpoints stub para Drive sync
-- ✅ Documentación Swagger/OpenAPI
-- ✅ CORS configurado
-- ✅ Manejo de errores HTTP
+### REST API
+- Configuration endpoint with validation
+- Complete store CRUD
+- Complete document CRUD
+- RAG query endpoint
+- Stub endpoints for Drive sync
+- Swagger/OpenAPI documentation
+- CORS configured
+- HTTP error handling
 
-### Autenticación y Configuración
-- ✅ Configuración de Google API key
-- ✅ Validación de conexión
-- ✅ Almacenamiento seguro en backend
-- ✅ No exposición de credenciales en frontend
-- ✅ Health check endpoint
+### Authentication and Configuration
+- Google API key configuration
+- Connection validation
+- Secure backend storage
+- No credential exposure in frontend
+- Health check endpoint
 
-### Drive Sync (Base Futura)
-- ✅ Modelos de datos definidos
-- ✅ Endpoints stub implementados
-- ✅ UI para configurar vínculos
-- ✅ Estructura para modo manual/auto
-- ✅ Documentación de implementación futura
+### Drive Sync (Future Base)
+- Data models defined
+- Stub endpoints implemented
+- UI for configuring links
+- Structure for manual/auto mode
+- Future implementation documentation
 
-### Arquitectura y Código
-- ✅ Separación clara de capas (API → Services → Google Client)
-- ✅ Código modular y reutilizable
-- ✅ Nombres claros y descriptivos
-- ✅ Logging en operaciones clave
-- ✅ Manejo robusto de errores
-- ✅ Comentarios y documentación
+### Architecture and Code
+- Clear layer separation (API -> Services -> Google Client)
+- Modular and reusable code
+- Clear and descriptive names
+- Logging in key operations
+- Robust error handling
+- Comments and documentation
 
-### Deployment y Documentación
-- ✅ README completo con instrucciones
-- ✅ Scripts de instalación (setup.sh)
-- ✅ Scripts de inicio (start.sh)
-- ✅ Archivos .env.example
-- ✅ .gitignore apropiado
-- ✅ Documentación de API
-- ✅ Ejemplos de uso (curl)
+### Deployment and Documentation
+- Complete README with instructions
+- Installation scripts (setup.sh)
+- Startup scripts (start.sh)
+- .env.example files
+- Appropriate .gitignore
+- API documentation
+- Usage examples (curl)
 
-## 🎯 Cumplimiento de Especificaciones
+## Specification Compliance
 
-### 1. Contexto y Documentación ✅
-- Implementación basada en documentación oficial de File Search
-- Uso del SDK oficial google-generativeai
-- Comportamientos ajustados a la API oficial
+### 1. Context and Documentation
+- Implementation based on official File Search documentation
+- Use of official google-generativeai SDK
+- Behaviors adjusted to official API
 
-### 2. Objetivo Global del Sistema ✅
-- Sistema RAG completo implementado
-- Gestión visual de stores, documentos y metadata
-- Consultas RAG con citas a fuentes
-- API REST completamente funcional
-- Base preparada para sincronización Drive
+### 2. Global System Objective
+- Complete RAG system implemented
+- Visual management of stores, documents, and metadata
+- RAG queries with source citations
+- Fully functional REST API
+- Base prepared for Drive synchronization
 
-### 3. Arquitectura y Stack ✅
+### 3. Architecture and Stack
 - Backend: Python 3.11+ + FastAPI + google-generativeai
 - Frontend: React 18 + TypeScript + Vite + Material-UI
-- Separación clara de capas
-- Código modular y extensible
+- Clear layer separation
+- Modular and extensible code
 
-### 4. Autenticación con Google ✅
-- Configuración de API key desde UI
-- Validación de conexión
-- Almacenamiento seguro en backend
-- Endpoint de health check
+### 4. Google Authentication
+- API key configuration from UI
+- Connection validation
+- Secure backend storage
+- Health check endpoint
 
-### 5. Gestión de Stores ✅
-- Crear, listar, eliminar stores
-- Selector de store activo en UI
-- Display name personalizable
+### 5. Store Management
+- Create, list, delete stores
+- Active store selector in UI
+- Customizable display name
 
-### 6. Gestión de Documentos y Metadatos ✅
-- Upload con hasta 20 metadatos clave/valor
-- Soporte para valores string y numeric
-- Configuración de chunking (max_tokens, overlap)
-- Listado paginado
-- Actualización (delete + recreate)
-- Eliminación con confirmación
+### 6. Document and Metadata Management
+- Upload with up to 20 key/value metadata
+- Support for string and numeric values
+- Chunking configuration (max_tokens, overlap)
+- Paginated listing
+- Update (delete + recreate)
+- Deletion with confirmation
 
-### 7. Consultas RAG ✅
-- Preguntas en lenguaje natural
+### 7. RAG Queries
+- Natural language questions
 - Multi-store selection
-- Filtros por metadata
-- Respuestas con citas
-- Extracción de grounding metadata
-- Modelo configurable (gemini-2.0-flash-exp)
+- Metadata filters
+- Responses with citations
+- Grounding metadata extraction
+- Configurable model (gemini-2.0-flash-exp)
 
-### 8. API REST Externa ✅
-- Todos los endpoints documentados
-- CORS configurado
-- Respuestas JSON estructuradas
-- Códigos HTTP apropiados
-- Documentación interactiva
+### 8. External REST API
+- All endpoints documented
+- CORS configured
+- Structured JSON responses
+- Appropriate HTTP codes
+- Interactive documentation
 
-### 9. Módulo Drive Sync (Base) ✅
-- Modelos de datos completos
-- Endpoints stub implementados
-- UI funcional para configuración
-- Documentación de implementación futura
-- Estructura para sincronización manual/auto
+### 9. Drive Sync Module (Base)
+- Complete data models
+- Stub endpoints implemented
+- Functional UI for configuration
+- Future implementation documentation
+- Structure for manual/auto synchronization
 
-### 10. Requisitos No Funcionales ✅
-- Código legible y modular
-- Manejo robusto de errores
-- Logging de operaciones
-- README con instrucciones completas
-- Scripts de instalación y arranque
+### 10. Non-Functional Requirements
+- Readable and modular code
+- Robust error handling
+- Operation logging
+- README with complete instructions
+- Installation and startup scripts
 
-## 🚀 Cómo Usar
+## How to Use
 
-1. **Instalación**:
+1. **Installation**:
    ```bash
    ./setup.sh
    ```
 
-2. **Configuración**:
-   - Editar `backend/.env` con tu Google API key
-   - O configurar desde la UI en la sección Configuration
+2. **Configuration**:
+   - Edit `backend/.env` with your Google API key
+   - Or configure from UI in Configuration section
 
-3. **Inicio**:
+3. **Startup**:
    ```bash
    ./start.sh
    ```
 
-4. **Acceso**:
+4. **Access**:
    - Frontend: http://localhost:5173
    - Backend: http://localhost:8000
    - API Docs: http://localhost:8000/docs
 
-## 📊 Métricas del Proyecto
+## Project Metrics
 
-- **Archivos Python**: 21
-- **Archivos TypeScript/TSX**: 15
-- **Endpoints API**: 15+
-- **Componentes React**: 6 páginas
-- **Modelos Pydantic**: 25+
-- **Líneas de código**: ~3500+
+- **Python files**: 21
+- **TypeScript/TSX files**: 15
+- **API endpoints**: 15+
+- **React components**: 6 pages
+- **Pydantic models**: 25+
+- **Lines of code**: ~3500+
 
-## 🔮 Próximos Pasos Sugeridos
+## Suggested Next Steps
 
-1. Implementar autenticación completa con Google Drive API
-2. Añadir base de datos para persistencia
-3. Implementar scheduler para sincronización automática
-4. Añadir tests unitarios y de integración
-5. Implementar autenticación de usuarios
-6. Añadir analytics y métricas de uso
-7. Optimizar rendimiento con caching
-8. Añadir soporte para más formatos de archivo
+1. Implement complete authentication with Google Drive API
+2. Add database for persistence
+3. Implement scheduler for automatic synchronization
+4. Add unit and integration tests
+5. Implement user authentication
+6. Add usage analytics and metrics
+7. Optimize performance with caching
+8. Add support for more file formats
 
 ---
 
-**Estado**: ✅ Proyecto Completo y Funcional
-**Fecha**: 2025-11-16
+**Status**: Project Complete and Functional
+**Date**: 2025-11-16
 **Stack**: Python + FastAPI + React + TypeScript + Material-UI
 **API**: Google Gemini File Search
