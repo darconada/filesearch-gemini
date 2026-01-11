@@ -1,38 +1,38 @@
 # Security Hardening Plan
 
-**Estado:** En desarrollo - Plan de seguridad para implementación antes de producción
+**Status:** In development - Security plan for implementation before production
 
-**Objetivo:** Cerrar superficie de ataque sin romper flujos actuales. Orden de ejecución por prioridad de riesgo.
+**Goal:** Close attack surface without breaking current flows. Execution order by risk priority.
 
 ---
 
-## 🔴 CRÍTICO - Implementar ANTES de producción
+## CRITICAL - Implement BEFORE production
 
-### 1) Restricción de sistema de archivos ⚠️ URGENTE
+### 1) Filesystem restriction - URGENT
 
-**Problema:** File browser y local files pueden acceder a TODO el filesystem del servidor.
+**Problem:** File browser and local files can access the ENTIRE server filesystem.
 
-**Solución:**
-- Introducir env `ALLOWED_FS_ROOT` (p.ej. `/data/files`). Validar que `file_browser` y `local_files` no puedan salir de ese root.
-- Implementar validación que rechace path traversal (`../`, `..\\`, symlinks que apunten fuera del root).
-- Añadir blocklist hardcodeada de rutas sensibles: `/etc`, `/root`, `/home`, `/var`, `/sys`, `/proc`, `.ssh`, `.env`, `token.json`, `credentials.json`.
-- Normalizar paths con `os.path.realpath()` y validar que empiecen con `ALLOWED_FS_ROOT`.
+**Solution:**
+- Introduce env `ALLOWED_FS_ROOT` (e.g., `/data/files`). Validate that `file_browser` and `local_files` cannot escape that root.
+- Implement validation that rejects path traversal (`../`, `..\\`, symlinks pointing outside root).
+- Add hardcoded blocklist of sensitive paths: `/etc`, `/root`, `/home`, `/var`, `/sys`, `/proc`, `.ssh`, `.env`, `token.json`, `credentials.json`.
+- Normalize paths with `os.path.realpath()` and validate they start with `ALLOWED_FS_ROOT`.
 
-**Archivos afectados:**
+**Affected files:**
 - `backend/app/services/file_browser_service.py`
 - `backend/app/services/local_file_service.py`
 
-**Verificación:**
+**Verification:**
 ```python
-# Tests que deben FALLAR con 403:
-- Acceso a ../../etc/passwd
-- Acceso a /root/
-- Symlink fuera del root
-- Rutas con null bytes
-- Rutas URL-encoded maliciosas
+# Tests that should FAIL with 403:
+- Access to ../../etc/passwd
+- Access to /root/
+- Symlink outside root
+- Paths with null bytes
+- Malicious URL-encoded paths
 ```
 
-**Código ejemplo:**
+**Example code:**
 ```python
 import os
 from pathlib import Path
@@ -41,16 +41,16 @@ ALLOWED_FS_ROOT = os.getenv("ALLOWED_FS_ROOT", "/data/files")
 BLOCKED_PATHS = ["/etc", "/root", "/home", "/var", "/sys", "/proc", ".ssh", ".env", "token.json", "credentials.json"]
 
 def validate_path(requested_path: str) -> Path:
-    """Valida que el path esté dentro del root permitido"""
-    # Normalizar y resolver symlinks
+    """Validates that path is within allowed root"""
+    # Normalize and resolve symlinks
     real_path = Path(requested_path).resolve()
     root_path = Path(ALLOWED_FS_ROOT).resolve()
 
-    # Verificar que está dentro del root
+    # Verify it's within root
     if not str(real_path).startswith(str(root_path)):
         raise PermissionError(f"Access denied: path outside allowed root")
 
-    # Verificar blocklist
+    # Check blocklist
     for blocked in BLOCKED_PATHS:
         if blocked in str(real_path):
             raise PermissionError(f"Access denied: blocked path pattern")
@@ -60,22 +60,22 @@ def validate_path(requested_path: str) -> Path:
 
 ---
 
-### 2) Input validation y sanitización
+### 2) Input validation and sanitization
 
-**Problema:** Falta validación estricta de inputs que pueden causar vulnerabilidades.
+**Problem:** Lack of strict input validation that can cause vulnerabilities.
 
-**Solución:**
-- **File IDs de Google:** Validar formato (alfanumérico + `-_`, longitud esperada).
-- **Nombres de archivo:** Sanitizar antes de guardar (sin `../`, sin null bytes, sin caracteres especiales peligrosos).
-- **Metadata:** Validar tipos, límites (max 20 keys), longitud de valores.
-- **Store IDs:** Validar formato esperado de Google.
-- **Project names:** Sanitizar SQL injection, XSS (aunque uses ORM).
+**Solution:**
+- **Google File IDs:** Validate format (alphanumeric + `-_`, expected length).
+- **Filenames:** Sanitize before saving (no `../`, no null bytes, no dangerous special characters).
+- **Metadata:** Validate types, limits (max 20 keys), value lengths.
+- **Store IDs:** Validate expected Google format.
+- **Project names:** Sanitize SQL injection, XSS (even using ORM).
 
-**Archivos afectados:**
-- `backend/app/models/schemas.py` - Añadir validators de Pydantic
-- Todos los services que manejen input de usuario
+**Affected files:**
+- `backend/app/models/schemas.py` - Add Pydantic validators
+- All services that handle user input
 
-**Código ejemplo:**
+**Example code:**
 ```python
 from pydantic import validator, Field
 import re
@@ -85,7 +85,7 @@ class DocumentUpload(BaseModel):
 
     @validator('store_id')
     def validate_store_id(cls, v):
-        # Formato: fileSearchStores/xxx-xxx-xxx
+        # Format: fileSearchStores/xxx-xxx-xxx
         if not re.match(r'^fileSearchStores/[a-z0-9-]+$', v):
             raise ValueError('Invalid store ID format')
         return v
@@ -95,7 +95,7 @@ class LocalFileLinkCreate(BaseModel):
 
     @validator('local_path')
     def validate_local_path(cls, v):
-        # No permitir path traversal
+        # Don't allow path traversal
         if '..' in v or v.startswith('/'):
             raise ValueError('Invalid path: path traversal detected')
         # No null bytes
@@ -106,25 +106,25 @@ class LocalFileLinkCreate(BaseModel):
 
 ---
 
-### 3) Gestión segura de secretos
+### 3) Secure secrets management
 
-**Problema:** Secretos en archivos `.env` y permisos de archivos.
+**Problem:** Secrets in `.env` files and file permissions.
 
-**Solución:**
-- **Desarrollo:** Continuar usando `.env` pero con `.env.example` documentado.
-- **Producción:** Mover a variables de entorno del sistema o secret manager (AWS Secrets Manager, HashiCorp Vault, etc.).
-- Asegurar permisos restrictivos: `chmod 600` para `.encryption_key`, `token.json`, `credentials.json`.
-- **CRÍTICO:** Documentar proceso de backup seguro de `.encryption_key` - si se pierde, las API keys encriptadas son irrecuperables.
-- Añadir validación al arrancar: si falta `.encryption_key` en prod, FAIL FAST.
+**Solution:**
+- **Development:** Continue using `.env` but with documented `.env.example`.
+- **Production:** Move to system environment variables or secret manager (AWS Secrets Manager, HashiCorp Vault, etc.).
+- Ensure restrictive permissions: `chmod 600` for `.encryption_key`, `token.json`, `credentials.json`.
+- **CRITICAL:** Document secure backup process for `.encryption_key` - if lost, encrypted API keys are unrecoverable.
+- Add startup validation: if `.encryption_key` is missing in prod, FAIL FAST.
 
-**Verificación:**
+**Verification:**
 ```bash
-# Permisos correctos
-ls -la backend/.encryption_key  # debe ser 600 (-rw-------)
-ls -la backend/token.json       # debe ser 600
-ls -la backend/credentials.json # debe ser 600
+# Correct permissions
+ls -la backend/.encryption_key  # should be 600 (-rw-------)
+ls -la backend/token.json       # should be 600
+ls -la backend/credentials.json # should be 600
 
-# En producción, estas variables NO deben estar en .env
+# In production, these variables should NOT be in .env
 - GOOGLE_API_KEY
 - GOOGLE_CLIENT_ID
 - GOOGLE_CLIENT_SECRET
@@ -134,39 +134,39 @@ ls -la backend/credentials.json # debe ser 600
 
 ### 4) Backup security
 
-**Problema:** `/backups/restore` es destructivo y no tiene validación suficiente.
+**Problem:** `/backups/restore` is destructive and lacks sufficient validation.
 
-**Solución:**
-- **Doble confirmación:** Requiere parámetro `confirm=true` + timestamp reciente para evitar CSRF.
-- **Validación de archivo:**
-  - Verificar que es un `.tar.gz` válido
-  - Verificar tamaño máximo (e.g., 100MB)
-  - Escanear contenido antes de extraer (no archivos ejecutables sospechosos)
-- **Checksum:** Generar SHA256 al crear backup, validar al restaurar.
-- **Audit:** Log detallado de quién restauró qué y cuándo.
-- **Rate limiting:** Máximo 1 restore cada 5 minutos.
+**Solution:**
+- **Double confirmation:** Require `confirm=true` parameter + recent timestamp to prevent CSRF.
+- **File validation:**
+  - Verify it's a valid `.tar.gz`
+  - Verify maximum size (e.g., 100MB)
+  - Scan content before extracting (no suspicious executable files)
+- **Checksum:** Generate SHA256 when creating backup, validate when restoring.
+- **Audit:** Detailed log of who restored what and when.
+- **Rate limiting:** Maximum 1 restore every 5 minutes.
 
-**Código ejemplo:**
+**Example code:**
 ```python
 import hashlib
 import tarfile
 
 def validate_backup_file(file_path: str) -> bool:
-    # Verificar tamaño
+    # Verify size
     if os.path.getsize(file_path) > 100 * 1024 * 1024:  # 100MB
         raise ValueError("Backup file too large")
 
-    # Verificar que es tar.gz válido
+    # Verify it's valid tar.gz
     if not tarfile.is_tarfile(file_path):
         raise ValueError("Invalid tar.gz file")
 
-    # Verificar contenido
+    # Verify content
     with tarfile.open(file_path, 'r:gz') as tar:
         for member in tar.getmembers():
-            # No archivos fuera del backup dir
+            # No files outside backup dir
             if member.name.startswith('/') or '..' in member.name:
                 raise ValueError("Suspicious file path in backup")
-            # No ejecutables
+            # No executables
             if member.mode & 0o111:
                 raise ValueError("Executable files not allowed in backup")
 
@@ -175,35 +175,35 @@ def validate_backup_file(file_path: str) -> bool:
 
 ---
 
-## 🟡 IMPORTANTE - Implementar antes de usuarios externos
+## IMPORTANT - Implement before external users
 
-### 5) Autenticación básica con flag de compatibilidad
+### 5) Basic authentication with compatibility flag
 
-**Contexto:** Definir modelo de autenticación según caso de uso:
-- **Single-user/personal:** API key fija simple
-- **Multi-user:** JWT con roles
-- **Enterprise:** OAuth2 con Google/SAML
+**Context:** Define authentication model based on use case:
+- **Single-user/personal:** Simple fixed API key
+- **Multi-user:** JWT with roles
+- **Enterprise:** OAuth2 with Google/SAML
 
-**Solución inicial (single-user):**
-- Implementar API key simple usando `Depends` global en FastAPI.
-- Añadir env `AUTH_DISABLED=true` para dev/local; en prod debe ser `false`.
-- API key en header: `Authorization: Bearer <token>` o `x-api-key: <key>`.
-- Actualizar frontend/CLI/MCP para enviar header.
+**Initial solution (single-user):**
+- Implement simple API key using global `Depends` in FastAPI.
+- Add env `AUTH_DISABLED=true` for dev/local; in prod must be `false`.
+- API key in header: `Authorization: Bearer <token>` or `x-api-key: <key>`.
+- Update frontend/CLI/MCP to send header.
 
-**Archivos afectados:**
-- `backend/app/main.py` - Dependency global
-- `frontend/src/services/api.ts` - Añadir header
-- `cli/main.py` - Añadir header
-- `backend/mcp_server.py` - Autenticación MCP
+**Affected files:**
+- `backend/app/main.py` - Global dependency
+- `frontend/src/services/api.ts` - Add header
+- `cli/main.py` - Add header
+- `backend/mcp_server.py` - MCP authentication
 
-**Verificación:**
+**Verification:**
 ```bash
-# Con AUTH_DISABLED=false
+# With AUTH_DISABLED=false
 curl http://localhost:8000/stores  # 401 Unauthorized
 curl -H "x-api-key: SECRET" http://localhost:8000/stores  # 200 OK
 ```
 
-**Código ejemplo:**
+**Example code:**
 ```python
 from fastapi import Security, HTTPException, status
 from fastapi.security import APIKeyHeader
@@ -223,56 +223,56 @@ async def verify_api_key(api_key: str = Security(api_key_header)):
         )
     return True
 
-# En cada router:
+# In each router:
 @router.get("/stores", dependencies=[Depends(verify_api_key)])
 ```
 
 ---
 
-### 6) Roles y scopes mínimos
+### 6) Minimal roles and scopes
 
-**Requisito:** Implementar DESPUÉS de punto 5 (autenticación).
+**Requirement:** Implement AFTER point 5 (authentication).
 
-**Solución:**
-- Definir roles: `admin` y `user` (o `read-only`).
-- Asociar roles en el token/claim.
-- Marcar como admin-only:
-  - `/config/*` - Gestión de API keys
-  - `/projects/*` (write) - Creación/edición de proyectos
-  - `/file-browser/*` - Navegación del filesystem
-  - `/local-files/*` (write) - Sincronización local
+**Solution:**
+- Define roles: `admin` and `user` (or `read-only`).
+- Associate roles in token/claim.
+- Mark as admin-only:
+  - `/config/*` - API key management
+  - `/projects/*` (write) - Project creation/editing
+  - `/file-browser/*` - Filesystem navigation
+  - `/local-files/*` (write) - Local sync
   - `/backups/*` - Backup/restore
-  - `/audit-logs/*` - Logs de auditoría
-  - `/mcp_config/*` - Configuración MCP
-  - Operaciones de escritura en stores/docs (POST, PUT, DELETE)
-- Mantener para `user`:
-  - `/query` - Consultas RAG
-  - GET en stores/docs - Lectura
-  - `/drive/*` (read) - Ver links de Drive
+  - `/audit-logs/*` - Audit logs
+  - `/mcp_config/*` - MCP configuration
+  - Write operations on stores/docs (POST, PUT, DELETE)
+- Keep for `user`:
+  - `/query` - RAG queries
+  - GET on stores/docs - Reading
+  - `/drive/*` (read) - View Drive links
 
-**Verificación:**
+**Verification:**
 ```python
-# Tests por rol:
-- admin puede crear/eliminar stores ✓
-- user puede solo listar stores ✓
-- user no puede acceder a /file-browser ✗ 403
-- user puede hacer queries ✓
+# Tests by role:
+- admin can create/delete stores ✓
+- user can only list stores ✓
+- user cannot access /file-browser ✗ 403
+- user can do queries ✓
 ```
 
 ---
 
 ### 7) MCP Server security
 
-**Problema:** MCP server tiene acceso completo a la aplicación.
+**Problem:** MCP server has full access to the application.
 
-**Solución:**
-- **Modo stdio (local):** Sin autenticación adicional - confianza en proceso padre.
-- **Modo HTTP (remoto):** REQUIERE autenticación (API key o JWT).
-- Implementar scopes limitados para MCP: no permitir operaciones destructivas por defecto.
-- Rate limiting específico para MCP (10 req/min por operación costosa).
-- Audit log con identificación del cliente MCP.
+**Solution:**
+- **stdio mode (local):** No additional authentication - trust parent process.
+- **HTTP mode (remote):** REQUIRES authentication (API key or JWT).
+- Implement limited scopes for MCP: don't allow destructive operations by default.
+- Specific rate limiting for MCP (10 req/min for expensive operations).
+- Audit log with MCP client identification.
 
-**Configuración:**
+**Configuration:**
 ```python
 # backend/mcp_server.py
 MCP_MODE = os.getenv("MCP_MODE", "stdio")  # stdio | http
@@ -285,39 +285,39 @@ if MCP_MODE == "http":
 
 ---
 
-## 🟢 BUENO TENER - Hardening adicional
+## NICE TO HAVE - Additional hardening
 
-### 8) CORS, host y docs
+### 8) CORS, host, and docs
 
-**Solución:**
-- Separar CORS por entorno:
+**Solution:**
+- Separate CORS by environment:
   - **Dev:** `CORS_ORIGINS=http://localhost:5173,http://localhost:*`
   - **Prod:** `CORS_ORIGINS=https://yourdomain.com`
-- En producción: `docs_url=None, redoc_url=None` para deshabilitar `/docs` y `/redoc`.
-- No exponer `uvicorn` directamente - usar Nginx/Caddy con TLS.
-- Considerar `HOST=127.0.0.1` si está detrás de reverse proxy.
+- In production: `docs_url=None, redoc_url=None` to disable `/docs` and `/redoc`.
+- Don't expose `uvicorn` directly - use Nginx/Caddy with TLS.
+- Consider `HOST=127.0.0.1` if behind reverse proxy.
 
-**Verificación:**
+**Verification:**
 ```bash
-# En prod, estos deben fallar:
+# In prod, these should fail:
 curl http://localhost:8000/docs  # 404
 curl -H "Origin: http://evil.com" http://localhost:8000/stores  # CORS blocked
 ```
 
 ---
 
-### 9) Rate limiting y observabilidad
+### 9) Rate limiting and observability
 
-**Solución:**
-- Implementar rate limiting con `slowapi` o `fastapi-limiter`.
-- Priorizar endpoints sensibles:
-  - **Alta prioridad (5 req/min):** `/file-browser/*`, `/backups/restore`
-  - **Media prioridad (30 req/min):** `/query`, `/drive-links/sync`
-  - **Baja prioridad (100 req/min):** GET stores/docs
-- Incluir identidad autenticada en todos los `audit_logs`.
-- Métricas de Prometheus/Grafana (opcional pero recomendado).
+**Solution:**
+- Implement rate limiting with `slowapi` or `fastapi-limiter`.
+- Prioritize sensitive endpoints:
+  - **High priority (5 req/min):** `/file-browser/*`, `/backups/restore`
+  - **Medium priority (30 req/min):** `/query`, `/drive-links/sync`
+  - **Low priority (100 req/min):** GET stores/docs
+- Include authenticated identity in all `audit_logs`.
+- Prometheus/Grafana metrics (optional but recommended).
 
-**Código ejemplo:**
+**Example code:**
 ```python
 from slowapi import Limiter
 from slowapi.util import get_remote_address
@@ -337,26 +337,26 @@ async def query(...):
 
 ---
 
-### 10) Auditoría de superficie de ataque actual
+### 10) Current attack surface audit
 
-**Acción:** Antes de implementar, hacer inventario completo.
+**Action:** Before implementing, do complete inventory.
 
 ```bash
-# 1. Endpoints que acceden al filesystem
+# 1. Endpoints that access filesystem
 grep -rn "open(\|Path(\|os.path\|pathlib" backend/app/ > filesystem_access.txt
 
-# 2. Endpoints sin autenticación
+# 2. Endpoints without authentication
 grep -rn "@router\.\(get\|post\|put\|delete\)" backend/app/api/ > all_endpoints.txt
 
-# 3. Operaciones destructivas
+# 3. Destructive operations
 grep -rn "delete\|remove\|unlink\|rmtree" backend/app/ > destructive_ops.txt
 
-# 4. Acceso a base de datos
+# 4. Database access
 grep -rn "db.execute\|db.query\|session.execute" backend/app/ > db_access.txt
 ```
 
-**Crear matriz de riesgo:**
-| Endpoint | Método | Auth Required | FS Access | DB Write | Destructive | Risk Level |
+**Create risk matrix:**
+| Endpoint | Method | Auth Required | FS Access | DB Write | Destructive | Risk Level |
 |----------|--------|---------------|-----------|----------|-------------|------------|
 | /file-browser/list | GET | No | Yes | No | No | HIGH |
 | /backups/restore | POST | No | Yes | Yes | Yes | CRITICAL |
@@ -365,63 +365,63 @@ grep -rn "db.execute\|db.query\|session.execute" backend/app/ > db_access.txt
 
 ---
 
-## 📋 Plan de despliegue y migración
+## Deployment and Migration Plan
 
-### Fase 1: Desarrollo (Ahora)
-- ✅ Encriptación de API keys (completado)
-- ✅ Audit logs (completado)
-- ⏳ Implementar puntos 1-4 (CRÍTICO)
-- ⏳ Tests de seguridad automatizados
+### Phase 1: Development (Now)
+- ✅ API key encryption (completed)
+- ✅ Audit logs (completed)
+- ⏳ Implement points 1-4 (CRITICAL)
+- ⏳ Automated security tests
 
-### Fase 2: Staging
-- Implementar puntos 5-7 (IMPORTANTE)
-- Habilitar `AUTH_DISABLED=false`
-- Pruebas de penetración básicas
-- Actualizar todos los clientes (frontend/CLI/MCP)
+### Phase 2: Staging
+- Implement points 5-7 (IMPORTANT)
+- Enable `AUTH_DISABLED=false`
+- Basic penetration testing
+- Update all clients (frontend/CLI/MCP)
 
-### Fase 3: Pre-producción
-- Implementar puntos 8-9 (BUENO TENER)
-- TLS configurado
-- Secrets en secret manager
-- Reverse proxy configurado
-- Monitoreo y alertas
+### Phase 3: Pre-production
+- Implement points 8-9 (NICE TO HAVE)
+- TLS configured
+- Secrets in secret manager
+- Reverse proxy configured
+- Monitoring and alerts
 
-### Fase 4: Producción
-- Checklist final:
-  - [ ] TLS activo y certificado válido
-  - [ ] Secrets fuera de .env
+### Phase 4: Production
+- Final checklist:
+  - [ ] TLS active and valid certificate
+  - [ ] Secrets outside .env
   - [ ] AUTH_DISABLED=false
-  - [ ] ALLOWED_FS_ROOT configurado
-  - [ ] CORS restrictivo
-  - [ ] Docs deshabilitadas
-  - [ ] Rate limiting activo
-  - [ ] Backups automatizados
-  - [ ] Monitoreo configurado
-  - [ ] Tests de seguridad pasan
-  - [ ] Audit logs funcionando
+  - [ ] ALLOWED_FS_ROOT configured
+  - [ ] Restrictive CORS
+  - [ ] Docs disabled
+  - [ ] Rate limiting active
+  - [ ] Automated backups
+  - [ ] Monitoring configured
+  - [ ] Security tests pass
+  - [ ] Audit logs working
 
 ---
 
-## 🔧 Herramientas recomendadas
+## Recommended Tools
 
 **Testing:**
-- `pytest` + tests de seguridad específicos
-- `bandit` - Static analysis para Python
-- `safety` - Check de dependencias vulnerables
-- `sqlmap` - Test de SQL injection (aunque uses ORM)
+- `pytest` + specific security tests
+- `bandit` - Static analysis for Python
+- `safety` - Vulnerable dependency check
+- `sqlmap` - SQL injection test (even using ORM)
 
 **Runtime:**
 - `slowapi` - Rate limiting
 - `python-jose` - JWT handling
-- `bcrypt` - Password hashing (si implementas usuarios)
+- `bcrypt` - Password hashing (if implementing users)
 
 **Monitoring:**
-- `prometheus-fastapi-instrumentator` - Métricas
+- `prometheus-fastapi-instrumentator` - Metrics
 - `sentry-sdk` - Error tracking
 
 ---
 
-## 📚 Referencias
+## References
 
 - [OWASP Top 10](https://owasp.org/www-project-top-ten/)
 - [FastAPI Security](https://fastapi.tiangolo.com/tutorial/security/)
@@ -430,5 +430,5 @@ grep -rn "db.execute\|db.query\|session.execute" backend/app/ > db_access.txt
 
 ---
 
-**Última actualización:** 2025-11-29
-**Estado:** Plan completo - Pendiente de implementación
+**Last updated:** 2026-01-11
+**Status:** Complete plan - Pending implementation
