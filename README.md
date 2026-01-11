@@ -8,9 +8,9 @@ A full-stack web application for managing Google File Search and executing RAG (
 |--------|-----------|-----------|
 | ![Stores](docs/images/screenshot-stores.png) | ![Documents](docs/images/screenshot-documents.png) | ![Query](docs/images/screenshot-query.png) |
 
-| Drive Sync | Local Files | Configuration |
-|------------|-------------|---------------|
-| ![Drive](docs/images/screenshot-drive.png) | ![Local Files](docs/images/screenshot-local-files.png) | ![Config](docs/images/screenshot-config.png) |
+| Drive Sync | Local Files | LLM Integration |
+|------------|-------------|-----------------|
+| ![Drive](docs/images/screenshot-drive.png) | ![Local Files](docs/images/screenshot-local-files.png) | ![Integration](docs/images/screenshot-integration.png) |
 
 ## Key Features
 
