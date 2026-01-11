@@ -2,6 +2,27 @@
 
 A full-stack web application for managing Google File Search and executing RAG (Retrieval-Augmented Generation) queries with a modern interface, REST API, and **full Google Drive synchronization support**.
 
+## Screenshots
+
+| Stores | Documents | RAG Query |
+|--------|-----------|-----------|
+| ![Stores](docs/images/screenshot-stores.png) | ![Documents](docs/images/screenshot-documents.png) | ![Query](docs/images/screenshot-query.png) |
+
+| Drive Sync | Local Files | Configuration |
+|------------|-------------|---------------|
+| ![Drive](docs/images/screenshot-drive.png) | ![Local Files](docs/images/screenshot-local-files.png) | ![Config](docs/images/screenshot-config.png) |
+
+## Key Features
+
+- **RAG Queries** - Natural language search with source citations
+- **Store Management** - Create and manage File Search stores
+- **Document Management** - Upload with custom metadata, duplicate detection (SHA256)
+- **Google Drive Sync** - Auto-sync files from Drive with Picker UI
+- **Local File Sync** - Monitor and sync local files automatically
+- **REST API** - Full API with Swagger documentation
+- **MCP Server** - 21 tools for LLM agents (Claude Code, Gemini CLI, Codex)
+- **Multi-Project** - Manage multiple Google AI Studio projects
+
 ## Important - Version 2.0
 
 This application uses the **official `google-genai` SDK** (v1.6.1+). The older `google-generativeai` SDK **does NOT support File Search** and will cause errors.
