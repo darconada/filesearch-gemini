@@ -1,154 +1,154 @@
 # File Search RAG Application
 
-Una aplicación web completa para gestionar Google File Search y ejecutar consultas RAG (Retrieval-Augmented Generation) con una interfaz moderna, API REST y **sincronización completa con Google Drive**.
+A full-stack web application for managing Google File Search and executing RAG (Retrieval-Augmented Generation) queries with a modern interface, REST API, and **full Google Drive synchronization support**.
 
-## ⚠️ IMPORTANTE - Versión 2.0
+## Important - Version 2.0
 
-Esta aplicación usa el **SDK oficial `google-genai`** (v1.6.1+). El SDK anterior `google-generativeai` **NO soporta File Search** y causará errores.
+This application uses the **official `google-genai` SDK** (v1.6.1+). The older `google-generativeai` SDK **does NOT support File Search** and will cause errors.
 
-**Si tienes el error**: `module 'google.generativeai' has no attribute 'list_file_search_stores'`
-- ✅ **Solución**: Instala las dependencias correctas: `pip install -r requirements.txt`
-- ✅ El SDK correcto es `google-genai` (no `google-generativeai`)
+**If you get the error**: `module 'google.generativeai' has no attribute 'list_file_search_stores'`
+- **Solution**: Install the correct dependencies: `pip install -r requirements.txt`
+- The correct SDK is `google-genai` (not `google-generativeai`)
 
-**Novedades v2.2**:
-- ✨ **Soporte Multi-Proyecto**: Gestiona múltiples proyectos de Google AI Studio con diferentes API keys
-- ✨ **Servidor MCP completo**: 21 herramientas para Gemini CLI, Claude Code y Codex CLI
-- ✨ **CLI Local**: Interfaz de línea de comandos con Rich para terminal y agents
-- ✨ **Gestión Web de MCP/CLI**: Configuración desde la interfaz web
-- 📖 Ver [CHANGELOG.md](CHANGELOG.md) para detalles completos v2.2, v2.1 y v2.0
-- 📖 Ver [MCP_INTEGRATION.md](MCP_INTEGRATION.md) para integración con LLM agents
-- 📖 Ver [MULTI_PROJECT.md](MULTI_PROJECT.md) para gestión multi-proyecto
-- 📖 Ver [DRIVE_SETUP.md](DRIVE_SETUP.md) para configurar Google Drive
+**What's New in v2.2**:
+- **Multi-Project Support**: Manage multiple Google AI Studio projects with different API keys
+- **Complete MCP Server**: 21 tools for Gemini CLI, Claude Code, and Codex CLI
+- **Local CLI**: Command-line interface with Rich for terminal and agents
+- **Web-based MCP/CLI Management**: Configuration from the web interface
+- See [CHANGELOG.md](CHANGELOG.md) for full details on v2.2, v2.1, and v2.0
+- See [MCP_INTEGRATION.md](MCP_INTEGRATION.md) for LLM agent integration
+- See [MULTI_PROJECT.md](MULTI_PROJECT.md) for multi-project management
+- See [DRIVE_SETUP.md](DRIVE_SETUP.md) for Google Drive setup
 
-## 📋 Características
+## Features
 
-### ✅ Funcionalidades Implementadas
+### Implemented Functionality
 
-- **Gestión de Configuración**
-  - Configuración de API key de Google
-  - Validación de conexión en tiempo real
-  - Almacenamiento seguro en backend
+- **Configuration Management**
+  - Google API key configuration
+  - Real-time connection validation
+  - Secure backend storage
 
-- **Gestión de File Search Stores**
-  - Crear, listar y eliminar stores
-  - Selección de store activo
-  - Visualización de metadatos
+- **File Search Store Management**
+  - Create, list, and delete stores
+  - Active store selection
+  - Metadata visualization
 
-- **Gestión de Documentos**
-  - Subida de documentos al File Search store
-  - **🆕 Detección de duplicados por SHA256**: Previene subidas duplicadas automáticamente
-  - **Advertencia de duplicados**: Diálogo interactivo con opción de forzar subida
-  - **Tracking completo**: Todos los documentos registrados en BD con hash, metadata y fecha
-  - Listado paginado de documentos
-  - Actualización de documentos (eliminar + recrear)
-  - Eliminación de documentos con forzado (force delete para documentos indexados)
-  - Preservación de nombres de archivo originales
-  - **Soporte completo para metadatos personalizados** (texto y numéricos)
+- **Document Management**
+  - Upload documents to File Search store
+  - **Duplicate Detection via SHA256**: Automatically prevents duplicate uploads
+  - **Duplicate Warning**: Interactive dialog with option to force upload
+  - **Complete Tracking**: All documents registered in DB with hash, metadata, and date
+  - Paginated document listing
+  - Document updates (delete + recreate)
+  - Document deletion with force option (for indexed documents)
+  - Original filename preservation
+  - **Full support for custom metadata** (text and numeric)
 
-- **Consultas RAG**
-  - Preguntas en lenguaje natural
-  - Búsqueda multi-store
-  - Filtros por metadata personalizados
-  - Visualización de respuestas con citas a documentos fuente
-  - Extracción de grounding metadata
+- **RAG Queries**
+  - Natural language questions
+  - Multi-store search
+  - Custom metadata filters
+  - Response visualization with citations to source documents
+  - Grounding metadata extraction
 
-- **Interfaz de Usuario**
-  - UI moderna con Material-UI
-  - Temas claro y oscuro
-  - Navegación responsive
-  - Visualización clara de estados y errores
+- **User Interface**
+  - Modern UI with Material-UI
+  - Light and dark themes
+  - Responsive navigation
+  - Clear state and error visualization
 
-- **API REST Completa**
-  - Endpoints documentados con FastAPI (Swagger/OpenAPI)
-  - CORS configurado para desarrollo local
-  - Manejo robusto de errores
-  - Soporte para multipart/form-data
+- **Complete REST API**
+  - Endpoints documented with FastAPI (Swagger/OpenAPI)
+  - CORS configured for local development
+  - Robust error handling
+  - Support for multipart/form-data
 
-- **🆕 Integración MCP (Model Context Protocol)**
-  - Servidor MCP completo con 21 herramientas
-  - Compatible con Gemini CLI, Claude Code y Codex CLI
-  - Soporte para stdio y HTTP
-  - Documentación completa de integración
+- **MCP Integration (Model Context Protocol)**
+  - Complete MCP server with 21 tools
+  - Compatible with Gemini CLI, Claude Code, and Codex CLI
+  - Support for stdio and HTTP
+  - Complete integration documentation
 
-- **🆕 CLI Local (filesearch-gemini)**
-  - Interfaz de línea de comandos completa
-  - Subcomandos para todas las operaciones
-  - Compatible con LLM agents
-  - Salida formateada con Rich
+- **Local CLI (filesearch-gemini)**
+  - Complete command-line interface
+  - Subcommands for all operations
+  - Compatible with LLM agents
+  - Formatted output with Rich
 
-- **🆕 Soporte Multi-Proyecto**
-  - Gestiona múltiples proyectos de Google AI Studio
-  - Cada proyecto con su propia API key
-  - Hasta 10 stores por proyecto
-  - Selector de proyecto en el header
-  - Activación rápida entre proyectos
-  - Ver [MULTI_PROJECT.md](MULTI_PROJECT.md) para más detalles
+- **Multi-Project Support**
+  - Manage multiple Google AI Studio projects
+  - Each project with its own API key
+  - Up to 10 stores per project
+  - Project selector in the header
+  - Quick switching between projects
+  - See [MULTI_PROJECT.md](MULTI_PROJECT.md) for more details
 
-- **🆕 Sincronización de Archivos Locales**
-  - Vinculación de archivos locales del servidor a File Search stores
-  - **Metadata personalizada**: Añade hasta 20 pares key-value a cada archivo
-  - **Asociación a proyectos**: Archivos vinculados automáticamente al proyecto activo
-  - **Filtrado automático**: Solo se muestran archivos del proyecto activo
-  - **Detección de cambios**: Sincronización automática basada en hash SHA256
-  - **Auto-sync scheduler**: Sincronización automática cada 3 minutos
-  - **Versionado de archivos**: Historial completo de actualizaciones
-  - **Recarga automática**: La lista se actualiza al cambiar de proyecto
+- **Local File Synchronization**
+  - Link server local files to File Search stores
+  - **Custom Metadata**: Add up to 20 key-value pairs to each file
+  - **Project Association**: Files automatically linked to the active project
+  - **Automatic Filtering**: Only files from the active project are displayed
+  - **Change Detection**: Automatic synchronization based on SHA256 hash
+  - **Auto-sync Scheduler**: Automatic synchronization every 3 minutes
+  - **File Versioning**: Complete update history
+  - **Auto-reload**: List updates when switching projects
 
-- **🆕 Sincronización con Google Drive**
-  - Modelos de datos preparados con persistencia en SQLite
-  - Endpoints implementados para gestión de links
-  - **✅ Google Picker API**: Selecciona archivos de Drive visualmente desde la UI (100% funcional)
-  - Navegador de archivos integrado en el diálogo de creación con botón "Browse Drive"
-  - Auto-rellenado del File ID y nombre del archivo al seleccionar
-  - UI completa para configurar vínculos Drive → File Search
-  - Estructura para sincronización manual/automática
-  - Ver [GOOGLE_PICKER_SETUP.md](GOOGLE_PICKER_SETUP.md) para configuración
+- **Google Drive Synchronization**
+  - Data models prepared with SQLite persistence
+  - Endpoints implemented for link management
+  - **Google Picker API**: Visually select Drive files from the UI (100% functional)
+  - Integrated file browser in creation dialog with "Browse Drive" button
+  - Auto-fill of File ID and filename when selecting
+  - Complete UI for configuring Drive → File Search links
+  - Structure for manual/automatic synchronization
+  - See [GOOGLE_PICKER_SETUP.md](GOOGLE_PICKER_SETUP.md) for configuration
 
-- **🆕 Navegador de Archivos del Servidor**
-  - Explorar archivos locales del servidor desde la UI
-  - Selección directa de archivos para subir
-  - Navegación segura con restricciones de directorio
+- **Server File Browser**
+  - Explore server local files from the UI
+  - Direct file selection for upload
+  - Secure navigation with directory restrictions
 
-## 🏗️ Arquitectura
+## Architecture
 
 ### Backend (Python + FastAPI)
 
 ```
 backend/
 ├── app/
-│   ├── main.py              # Aplicación FastAPI principal
-│   ├── config.py            # Configuración global
+│   ├── main.py              # Main FastAPI application
+│   ├── config.py            # Global configuration
 │   ├── database.py          # SQLAlchemy setup
-│   ├── models/              # Modelos Pydantic y DB
-│   │   ├── db_models.py     # Modelos SQLAlchemy (ProjectDB, DocumentDB, DriveLinkDB, LocalFileLinkDB)
+│   ├── models/              # Pydantic and DB models
+│   │   ├── db_models.py     # SQLAlchemy models (ProjectDB, DocumentDB, DriveLinkDB, LocalFileLinkDB)
 │   │   ├── store.py
 │   │   ├── document.py
 │   │   ├── query.py
 │   │   ├── config.py
 │   │   ├── drive.py
-│   │   ├── project.py       # Modelos multi-proyecto
-│   │   └── mcp_config.py    # Modelos MCP/CLI config
-│   ├── services/            # Lógica de negocio
+│   │   ├── project.py       # Multi-project models
+│   │   └── mcp_config.py    # MCP/CLI config models
+│   ├── services/            # Business logic
 │   │   ├── google_client.py
 │   │   ├── store_service.py
 │   │   ├── document_service.py
 │   │   ├── query_service.py
 │   │   ├── drive_service.py
-│   │   ├── project_service.py      # Gestión de proyectos
-│   │   └── mcp_config_service.py   # Gestión config MCP/CLI
-│   ├── api/                 # Endpoints REST
+│   │   ├── project_service.py      # Project management
+│   │   └── mcp_config_service.py   # MCP/CLI config management
+│   ├── api/                 # REST endpoints
 │   │   ├── config.py
 │   │   ├── stores.py
 │   │   ├── documents.py
 │   │   ├── query.py
 │   │   ├── drive.py
-│   │   ├── projects.py      # Endpoints multi-proyecto
-│   │   └── mcp_config.py    # Endpoints config MCP/CLI
-│   └── mcp/                 # Servidor MCP
-│       └── server.py        # 21 herramientas MCP
-├── mcp_server.py            # Entry point servidor MCP
+│   │   ├── projects.py      # Multi-project endpoints
+│   │   └── mcp_config.py    # MCP/CLI config endpoints
+│   └── mcp/                 # MCP server
+│       └── server.py        # 21 MCP tools
+├── mcp_server.py            # MCP server entry point
 ├── requirements.txt
-└── filesearch.db            # Base de datos SQLite
+└── filesearch.db            # SQLite database
 ```
 
 ### Frontend (React + TypeScript + Vite)
@@ -156,88 +156,88 @@ backend/
 ```
 frontend/
 ├── src/
-│   ├── components/          # Componentes React
-│   │   ├── common/          # Layout, navegación, ProjectSelector
-│   │   ├── config/          # Configuración
-│   │   ├── projects/        # Gestión multi-proyecto
-│   │   ├── stores/          # Gestión de stores
-│   │   ├── documents/       # Gestión de documentos
-│   │   ├── query/           # Consultas RAG
-│   │   ├── drive/           # Sincronización Drive
+│   ├── components/          # React components
+│   │   ├── common/          # Layout, navigation, ProjectSelector
+│   │   ├── config/          # Configuration
+│   │   ├── projects/        # Multi-project management
+│   │   ├── stores/          # Store management
+│   │   ├── documents/       # Document management
+│   │   ├── query/           # RAG queries
+│   │   ├── drive/           # Drive synchronization
 │   │   └── integration/     # MCP Server & CLI Config
-│   ├── services/            # Cliente API
-│   │   └── api.ts           # Incluye projectsApi, mcpApi, cliApi
-│   ├── types/               # Tipos TypeScript
-│   │   └── index.ts         # Incluye Project, MCP, CLI types
-│   ├── theme/               # Temas MUI
+│   ├── services/            # API client
+│   │   └── api.ts           # Includes projectsApi, mcpApi, cliApi
+│   ├── types/               # TypeScript types
+│   │   └── index.ts         # Includes Project, MCP, CLI types
+│   ├── theme/               # MUI themes
 │   │   └── theme.ts
 │   ├── App.tsx
 │   └── main.tsx
 └── package.json
 ```
 
-## 🚀 Instalación y Configuración
+## Installation and Setup
 
-### Requisitos Previos
+### Prerequisites
 
 - **Python 3.11+**
-- **Node.js 18+** y **npm**
-- **Google API Key** para Generative Language API ([Obtener aquí](https://aistudio.google.com/app/apikey))
+- **Node.js 18+** and **npm**
+- **Google API Key** for Generative Language API ([Get it here](https://aistudio.google.com/app/apikey))
 
-### 1. Clonar el Repositorio
+### 1. Clone the Repository
 
 ```bash
 git clone <repository-url>
 cd filesearch-gemini
 ```
 
-### 2. Configurar el Backend
+### 2. Configure the Backend
 
 ```bash
 cd backend
 
-# Crear entorno virtual
+# Create virtual environment
 python -m venv venv
 
-# Activar entorno virtual
-# En Linux/Mac:
+# Activate virtual environment
+# On Linux/Mac:
 source venv/bin/activate
-# En Windows:
+# On Windows:
 # venv\Scripts\activate
 
-# Instalar dependencias
+# Install dependencies
 pip install -r requirements.txt
 
-# Crear archivo .env (opcional, también se puede configurar desde la UI)
+# Create .env file (optional, can also be configured from the UI)
 cp .env.example .env
-# Editar .env y añadir tu GOOGLE_API_KEY si lo deseas
+# Edit .env and add your GOOGLE_API_KEY if desired
 ```
 
-### 3. Configurar el Frontend
+### 3. Configure the Frontend
 
 ```bash
 cd ../frontend
 
-# Instalar dependencias
+# Install dependencies
 npm install
 
-# Crear archivo .env (opcional)
+# Create .env file (optional)
 cp .env.example .env
 ```
 
-### 4. Iniciar la Aplicación
+### 4. Start the Application
 
-#### Opción A: Usar dos terminales
+#### Option A: Use two terminals
 
 **Terminal 1 - Backend:**
 ```bash
 cd backend
-source venv/bin/activate  # o venv\Scripts\activate en Windows
+source venv/bin/activate  # or venv\Scripts\activate on Windows
 python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-El backend estará disponible en: `http://localhost:8000`
-Documentación de la API: `http://localhost:8000/docs`
+The backend will be available at: `http://localhost:8000`
+API Documentation: `http://localhost:8000/docs`
 
 **Terminal 2 - Frontend:**
 ```bash
@@ -245,79 +245,79 @@ cd frontend
 npm run dev
 ```
 
-El frontend estará disponible en: `http://localhost:5173`
+The frontend will be available at: `http://localhost:5173`
 
-#### Opción B: Script de inicio (crear un script bash)
+#### Option B: Startup script (create a bash script)
 
 ```bash
 #!/bin/bash
 # start.sh
 
-# Iniciar backend en background
+# Start backend in background
 cd backend
 source venv/bin/activate
 python -m app.main &
 BACKEND_PID=$!
 
-# Iniciar frontend
+# Start frontend
 cd ../frontend
 npm run dev
 
-# Cleanup al salir
+# Cleanup on exit
 kill $BACKEND_PID
 ```
 
-## 🤖 Integración con LLM Agents (MCP y CLI)
+## LLM Agent Integration (MCP and CLI)
 
-Esta aplicación ahora se puede usar desde **agentes LLM** como **Gemini CLI**, **Claude Code** y **Codex CLI** mediante dos métodos:
+This application can now be used from **LLM agents** like **Gemini CLI**, **Claude Code**, and **Codex CLI** through two methods:
 
-### Método 1: Servidor MCP (Recomendado)
+### Method 1: MCP Server (Recommended)
 
-El servidor MCP expone todas las operaciones de File Search como herramientas que los agentes pueden invocar:
+The MCP server exposes all File Search operations as tools that agents can invoke:
 
 ```bash
-# Iniciar el servidor MCP
+# Start the MCP server
 cd backend
 python mcp_server.py
 ```
 
-**Herramientas MCP disponibles (21 en total)**:
-- Configuración: `set_api_key`, `get_config_status`
+**Available MCP tools (21 total)**:
+- Configuration: `set_api_key`, `get_config_status`
 - Stores: `create_store`, `list_stores`, `get_store`, `delete_store`
-- Documentos: `upload_document`, `list_documents`, `update_document`, `delete_document`
-- Consultas RAG: `rag_query`
+- Documents: `upload_document`, `list_documents`, `update_document`, `delete_document`
+- RAG Queries: `rag_query`
 - Drive Sync: `create_drive_link`, `list_drive_links`, `sync_drive_link_now`, etc.
 
-### Método 2: CLI Local
+### Method 2: Local CLI
 
-También puedes usar el CLI directamente desde tu terminal o desde agentes LLM:
+You can also use the CLI directly from your terminal or from LLM agents:
 
 ```bash
-# Ver ayuda
+# View help
 ./filesearch-gemini --help
 
-# Ejemplos rápidos
+# Quick examples
 ./filesearch-gemini stores list
 ./filesearch-gemini docs upload --store-id xxx --file doc.pdf
-./filesearch-gemini query --question "¿Qué dice sobre X?" --stores xxx
+./filesearch-gemini query --question "What does it say about X?" --stores xxx
 ```
 
-### 🌐 Gestión desde la Interfaz Web
+### Web Interface Management
 
-La nueva sección **LLM Integration** en la interfaz web te permite:
+The new **LLM Integration** section in the web interface allows you to:
 
-- **Configurar el servidor MCP**: URL del backend, habilitar/deshabilitar
-- **Ver ejemplos de configuración** para Gemini CLI, Claude Code y Codex con botones copiar/pegar
-- **Configurar el CLI local**: URL backend, store por defecto
-- **Acceder a la guía completa** de integración con instrucciones paso a paso
+- **Configure the MCP server**: Backend URL, enable/disable
+- **View configuration examples** for Gemini CLI, Claude Code, and Codex with copy/paste buttons
+- **Configure the local CLI**: Backend URL, default store
+- **Access the complete guide** for integration with step-by-step instructions
 
-Accede a: **http://localhost:5173/integration** después de iniciar el frontend.
+Access at: **http://localhost:5173/integration** after starting the frontend.
 
-### Configuración para Agentes
+### Agent Configuration
 
 #### Gemini CLI
 
-Añade a tu `settings.json`:
+Add to your `settings.json`:
 
 ```json
 {
@@ -348,151 +348,149 @@ codex mcp-server add filesearch-gemini \
   --args "/path/to/filesearch-gemini/backend/mcp_server.py"
 ```
 
-**📖 Documentación completa**: Ver [MCP_INTEGRATION.md](./MCP_INTEGRATION.md) para instrucciones detalladas, ejemplos de uso y troubleshooting.
+**Complete documentation**: See [MCP_INTEGRATION.md](./MCP_INTEGRATION.md) for detailed instructions, usage examples, and troubleshooting.
 
 ---
 
-## 📖 Uso de la Aplicación
+## Application Usage
 
-La aplicación se puede usar de **4 formas diferentes**:
+The application can be used in **4 different ways**:
 
-1. **Interfaz Web** (navegador en http://localhost:5173)
-2. **API REST** (HTTP requests a http://localhost:8000)
-3. **Servidor MCP** (para agentes LLM)
-4. **CLI local** (comando `filesearch-gemini`)
+1. **Web Interface** (browser at http://localhost:5173)
+2. **REST API** (HTTP requests to http://localhost:8000)
+3. **MCP Server** (for LLM agents)
+4. **Local CLI** (`filesearch-gemini` command)
 
-### 🚀 Configuración Inicial (Primer Uso)
+### Initial Setup (First Use)
 
-#### Opción 1: Crear un Proyecto (Recomendado - Multi-Proyecto)
+#### Option 1: Create a Project (Recommended - Multi-Project)
 
-1. **Navega a la sección Projects** en `http://localhost:5173/projects`
-2. **Click en "Create Project"**
-3. **Rellena el formulario:**
-   - **Name**: Por ejemplo "Mi Proyecto Principal"
-   - **API Key**: Tu Google AI Studio API key ([Obtener aquí](https://aistudio.google.com/app/apikey))
-   - **Description** (opcional): Descripción del proyecto
-4. **Click en "Create"**
-5. El proyecto se activará automáticamente y aparecerá en el selector del header
-6. **Reinicia el backend** para que cargue el proyecto activo
+1. **Navigate to the Projects section** at `http://localhost:5173/projects`
+2. **Click "Create Project"**
+3. **Fill in the form:**
+   - **Name**: For example "My Main Project"
+   - **API Key**: Your Google AI Studio API key ([Get it here](https://aistudio.google.com/app/apikey))
+   - **Description** (optional): Project description
+4. **Click "Create"**
+5. The project will be automatically activated and appear in the header selector
+6. **Restart the backend** to load the active project
 
-#### Opción 2: Configurar API Key directamente (Sin Multi-Proyecto)
+#### Option 2: Configure API Key Directly (Without Multi-Project)
 
-1. **Navega a la sección Configuration**
-2. **Introduce tu Google API Key**
-3. **Haz clic en "Save API Key"**
-4. Verifica que el estado muestre "API Key Valid: Valid"
+1. **Navigate to the Configuration section**
+2. **Enter your Google API Key**
+3. **Click "Save API Key"**
+4. Verify that the status shows "API Key Valid: Valid"
 
-**Nota**: Con la opción 2, solo puedes usar un proyecto. La opción 1 te permite gestionar múltiples proyectos de Google AI Studio.
+**Note**: With option 2, you can only use one project. Option 1 allows you to manage multiple Google AI Studio projects.
 
-### Uso desde la Interfaz Web
+### Using the Web Interface
 
-### 2. Crear un Store
+### 2. Create a Store
 
-1. Ve a la sección **Stores**
-2. Haz clic en **Create Store**
-3. Introduce un nombre descriptivo
-4. El store se marcará como activo automáticamente
+1. Go to the **Stores** section
+2. Click **Create Store**
+3. Enter a descriptive name
+4. The store will be automatically marked as active
 
-### 3. Subir Documentos
+### 3. Upload Documents
 
-1. Ve a la sección **Documents**
-2. Haz clic en **Upload Document**
-3. Selecciona un archivo
-4. Haz clic en **Upload**
-5. El documento se indexará automáticamente en el File Search store
+1. Go to the **Documents** section
+2. Click **Upload Document**
+3. Select a file
+4. Click **Upload**
+5. The document will be automatically indexed in the File Search store with the provided metadata
 
-5. El documento se indexará automáticamente en el File Search store con los metadatos proporcionados
+### 4. Perform RAG Queries
 
-### 4. Realizar Consultas RAG
+1. Go to the **RAG Query** section
+2. Select one or more stores
+3. Write your question
+4. (Optional) Add a metadata filter: `author="Robert Graves"`
+5. Click **Query**
+6. Review the response and cited sources
 
-1. Ve a la sección **RAG Query**
-2. Selecciona uno o más stores
-3. Escribe tu pregunta
-4. (Opcional) Añade un filtro de metadata: `author="Robert Graves"`
-5. Haz clic en **Query**
-6. Revisa la respuesta y las fuentes citadas
+### 5. Configure Drive Synchronization (Future Base)
 
-### 5. Configurar Sincronización con Drive (Base Futura)
+1. Go to the **Drive Sync** section
+2. Click **Add Link**
+3. Enter the Google Drive file ID
+4. Select the destination store
+5. Choose manual or automatic mode
+6. Full functionality will be implemented in future versions
 
-1. Ve a la sección **Drive Sync**
-2. Haz clic en **Add Link**
-3. Introduce el ID del archivo de Google Drive
-4. Selecciona el store de destino
-5. Elige modo manual o automático
-6. La funcionalidad completa se implementará en versiones futuras
+## REST API
 
-## 🔌 API REST
-
-La API está completamente documentada con Swagger/OpenAPI. Accede a:
-- **Documentación interactiva**: `http://localhost:8000/docs`
+The API is fully documented with Swagger/OpenAPI. Access at:
+- **Interactive Documentation**: `http://localhost:8000/docs`
 - **ReDoc**: `http://localhost:8000/redoc`
 
-### Endpoints Principales
+### Main Endpoints
 
-#### Configuración
-- `POST /config/api-key` - Configurar API key
-- `GET /config/status` - Obtener estado de configuración
+#### Configuration
+- `POST /config/api-key` - Configure API key
+- `GET /config/status` - Get configuration status
 
 #### Stores
-- `POST /stores` - Crear store
-- `GET /stores` - Listar stores
-- `GET /stores/{store_id}` - Obtener store
-- `DELETE /stores/{store_id}` - Eliminar store
+- `POST /stores` - Create store
+- `GET /stores` - List stores
+- `GET /stores/{store_id}` - Get store
+- `DELETE /stores/{store_id}` - Delete store
 
-#### Documentos
-- `POST /stores/{store_id}/documents` - Subir documento
-- `GET /stores/{store_id}/documents` - Listar documentos
-- `PUT /stores/{store_id}/documents/{document_id}` - Actualizar documento
-- `DELETE /stores/{store_id}/documents/{document_id}` - Eliminar documento
+#### Documents
+- `POST /stores/{store_id}/documents` - Upload document
+- `GET /stores/{store_id}/documents` - List documents
+- `PUT /stores/{store_id}/documents/{document_id}` - Update document
+- `DELETE /stores/{store_id}/documents/{document_id}` - Delete document
 
-#### Consultas RAG
-- `POST /query` - Ejecutar consulta RAG
+#### RAG Queries
+- `POST /query` - Execute RAG query
 
 #### Drive Links
-- `POST /drive-links` - Crear vínculo Drive
-- `GET /drive-links` - Listar vínculos
-- `GET /drive-links/{link_id}` - Obtener vínculo
-- `DELETE /drive-links/{link_id}` - Eliminar vínculo
-- `POST /drive-links/{link_id}/sync-now` - Sincronizar (stub)
+- `POST /drive-links` - Create Drive link
+- `GET /drive-links` - List links
+- `GET /drive-links/{link_id}` - Get link
+- `DELETE /drive-links/{link_id}` - Delete link
+- `POST /drive-links/{link_id}/sync-now` - Sync (stub)
 
-#### Proyectos (Multi-Proyecto)
-- `POST /projects` - Crear proyecto
-- `GET /projects` - Listar proyectos + proyecto activo
-- `GET /projects/active` - Obtener proyecto activo
-- `GET /projects/{id}` - Obtener proyecto específico
-- `PUT /projects/{id}` - Actualizar proyecto
-- `POST /projects/{id}/activate` - Activar proyecto
-- `DELETE /projects/{id}` - Eliminar proyecto
+#### Projects (Multi-Project)
+- `POST /projects` - Create project
+- `GET /projects` - List projects + active project
+- `GET /projects/active` - Get active project
+- `GET /projects/{id}` - Get specific project
+- `PUT /projects/{id}` - Update project
+- `POST /projects/{id}/activate` - Activate project
+- `DELETE /projects/{id}` - Delete project
 
-#### Integración MCP/CLI
-- `GET /integration/mcp/config` - Obtener configuración MCP
-- `POST /integration/mcp/config` - Actualizar configuración MCP
-- `GET /integration/mcp/status` - Estado y ejemplos MCP
-- `GET /integration/cli/config` - Obtener configuración CLI
-- `POST /integration/cli/config` - Actualizar configuración CLI
-- `GET /integration/cli/status` - Estado y ejemplos CLI
-- `GET /integration/guide` - Guía completa de integración
+#### MCP/CLI Integration
+- `GET /integration/mcp/config` - Get MCP configuration
+- `POST /integration/mcp/config` - Update MCP configuration
+- `GET /integration/mcp/status` - MCP status and examples
+- `GET /integration/cli/config` - Get CLI configuration
+- `POST /integration/cli/config` - Update CLI configuration
+- `GET /integration/cli/status` - CLI status and examples
+- `GET /integration/guide` - Complete integration guide
 
-### Ejemplo de Uso con cURL
+### Usage Example with cURL
 
 ```bash
-# Configurar API key
+# Configure API key
 curl -X POST http://localhost:8000/config/api-key \
   -H "Content-Type: application/json" \
   -d '{"api_key": "your_api_key_here"}'
 
-# Crear un store
+# Create a store
 curl -X POST http://localhost:8000/stores \
   -H "Content-Type: application/json" \
   -d '{"display_name": "My Documents"}'
 
-# Subir un documento
+# Upload a document
 curl -X POST http://localhost:8000/stores/{store_id}/documents \
   -F "file=@/path/to/document.pdf" \
   -F "display_name=Important Document" \
   -F 'metadata={"author":"John Doe","year":2024}'
 
-# Ejecutar consulta RAG
+# Execute RAG query
 curl -X POST http://localhost:8000/query \
   -H "Content-Type: application/json" \
   -d '{
@@ -502,106 +500,101 @@ curl -X POST http://localhost:8000/query \
   }'
 ```
 
-## 🎨 Características de la UI
+## UI Features
 
-- **Temas**: Alterna entre modo claro y oscuro usando el botón en la esquina superior derecha
-- **Navegación**: Menú lateral con acceso a todas las secciones
-- **Responsive**: Se adapta a diferentes tamaños de pantalla
-- **Feedback visual**: Estados de carga, mensajes de error y éxito
-- **Validación**: Validación de formularios en tiempo real
+- **Themes**: Toggle between light and dark mode using the button in the upper right corner
+- **Navigation**: Side menu with access to all sections
+- **Responsive**: Adapts to different screen sizes
+- **Visual Feedback**: Loading states, error and success messages
+- **Validation**: Real-time form validation
 
-## 🌐 Puertos y Servicios
+## Ports and Services
 
-La aplicación utiliza los siguientes puertos por defecto:
+The application uses the following default ports:
 
 - **Frontend**: `http://localhost:5173` (Vite dev server)
 - **Backend FastAPI**: `http://localhost:8000` (uvicorn)
-- **MCP Server**: Configurable desde la GUI (recomendado: puerto 8001)
-- **CLI Local**: Se conecta al backend (puerto configurable desde GUI)
+- **MCP Server**: Configurable from the GUI (recommended: port 8001)
+- **Local CLI**: Connects to backend (configurable port from GUI)
 
-**Importante**:
-- El **CLI** y el **MCP Server** NO son servidores independientes
-- El **CLI** es una herramienta de línea de comandos que se conecta al backend FastAPI
-- El **MCP Server** se puede ejecutar en modo stdio (sin puerto) o HTTP (con puerto configurable)
+**Important**:
+- The **CLI** and **MCP Server** are NOT standalone servers
+- The **CLI** is a command-line tool that connects to the FastAPI backend
+- The **MCP Server** can run in stdio mode (no port) or HTTP (configurable port)
 
-## 🔐 Seguridad
+## Security
 
-- Las API keys se almacenan en la base de datos SQLite (backend/filesearch.db)
-- También se pueden configurar en el archivo `backend/.env` para retrocompatibilidad
-- Las API keys no se exponen en las respuestas de la API (campo `has_api_key`)
-- CORS configurado solo para orígenes locales
-- Para producción, considera:
-  - **Encriptar API keys** en la base de datos (TODO marcado en el código)
-  - Añadir autenticación (JWT, OAuth)
-  - Usar HTTPS
-  - Configurar CORS apropiadamente
-  - Usar variables de entorno seguras
-  - Implementar rate limiting
+- API keys are stored in the SQLite database (backend/filesearch.db)
+- They can also be configured in the `backend/.env` file for backward compatibility
+- API keys are not exposed in API responses (`has_api_key` field)
+- CORS configured only for local origins
+- For production, consider:
+  - **Encrypting API keys** in the database (TODO marked in code)
+  - Adding authentication (JWT, OAuth)
+  - Using HTTPS
+  - Configuring CORS appropriately
+  - Using secure environment variables
+  - Implementing rate limiting
 
-## 🛠️ Desarrollo
+## Development
 
-### Estructura de Código
+### Code Structure
 
-- **Backend**: Arquitectura por capas (API → Services → Google Client)
-- **Frontend**: Componentes funcionales con React Hooks
-- **MCP Server**: FastMCP para exposición de herramientas a LLM agents
-- **CLI**: Click + Rich para interfaz de línea de comandos
-- **Tipado**: TypeScript estricto en frontend, Pydantic en backend
-- **Estado**: React Query para datos del servidor, useState para UI local
+- **Backend**: Layered architecture (API → Services → Google Client)
+- **Frontend**: Functional components with React Hooks
+- **MCP Server**: FastMCP for exposing tools to LLM agents
+- **CLI**: Click + Rich for command-line interface
+- **Typing**: Strict TypeScript in frontend, Pydantic in backend
+- **State**: React Query for server data, useState for local UI
 
 ### Logging
 
-El backend registra todas las operaciones importantes:
-- Conexiones a Google
-- Creación/eliminación de stores
-- Subida de documentos
-- Consultas RAG
+The backend logs all important operations:
+- Google connections
+- Store creation/deletion
+- Document uploads
+- RAG queries
 
-Los logs aparecen en la consola del servidor backend.
+Logs appear in the backend server console.
 
-### Manejo de Errores
+### Error Handling
 
-- Errores de API capturados y mostrados en la UI
-- Respuestas HTTP con códigos de estado apropiados
-- Mensajes de error descriptivos
+- API errors captured and displayed in the UI
+- HTTP responses with appropriate status codes
+- Descriptive error messages
 
-## 📝 Limitaciones Conocidas
+## Known Limitations
 
-1. **Sincronización con Drive**: Implementada como stub, requiere:
-   - Autenticación OAuth 2.0
-   - Integración con Google Drive API
-   - Scheduler para sincronización automática
+1. **Drive Synchronization**: Implemented as stub, requires:
+   - OAuth 2.0 authentication
+   - Google Drive API integration
+   - Scheduler for automatic synchronization
 
-2. **Paginación**: Implementada en backend, UI básica en frontend
-   - Autenticación OAuth 2.0
-   - Integración con Google Drive API
-   - Scheduler para sincronización automática
+2. **Pagination**: Implemented in backend, basic UI in frontend
 
-3. **Paginación**: Implementada en backend, UI básica en frontend
+3. **Drive Links Persistence**: Implemented with SQLite (backend/filesearch.db)
 
-3. **Persistencia de Drive Links**: Implementada con SQLite (backend/filesearch.db)
+## Future Improvements
 
-## 🚧 Futuras Mejoras
+### High Priority
+- [x] **COMPLETED**: Implement custom metadata upload for documents
+- [x] **COMPLETED**: Server file browser
 
-### Prioridad Alta
-- [x] **✅ COMPLETADO**: Implementar subida de metadatos personalizados en documentos
-- [x] **✅ COMPLETADO**: Navegador de archivos del servidor
+### Other Improvements
+- [ ] Complete Google Drive synchronization implementation
+- [ ] Database for Drive link persistence
+- [ ] User authentication and authorization
+- [ ] Per-user permission management
+- [ ] Query and response export
+- [ ] Query history
+- [ ] Usage analytics and statistics
+- [ ] Support for more document formats
+- [ ] Advanced document search and filtering in UI
+- [ ] Unit and integration tests
+- [x] **COMPLETED**: MCP server for LLM agent integration
+- [x] **COMPLETED**: Local CLI for terminal and agent use
 
-### Otras Mejoras
-- [ ] Implementación completa de sincronización con Google Drive
-- [ ] Base de datos para persistencia de vínculos Drive
-- [ ] Autenticación y autorización de usuarios
-- [ ] Gestión de permisos por usuario
-- [ ] Exportación de consultas y respuestas
-- [ ] Historial de consultas
-- [ ] Análisis y estadísticas de uso
-- [ ] Soporte para más formatos de documentos
-- [ ] Búsqueda y filtrado avanzado de documentos en UI
-- [ ] Tests unitarios y de integración
-- [x] **✅ COMPLETADO**: Servidor MCP para integración con LLM agents
-- [x] **✅ COMPLETADO**: CLI local para uso desde terminal y agents
-
-## 📚 Documentación de Referencia
+## Reference Documentation
 
 - [Google File Search Documentation](https://ai.google.dev/gemini-api/docs/file-search)
 - [Google Generative AI Python SDK](https://github.com/google/generative-ai-python)
@@ -609,102 +602,102 @@ Los logs aparecen en la consola del servidor backend.
 - [Material-UI Documentation](https://mui.com/)
 - [React Router](https://reactrouter.com/)
 
-## 💾 Backup & Restore
- 
- El proyecto incluye un script `manage_backup.sh` para facilitar el respaldo y restauración de la base de datos y credenciales locales.
- 
- ### Crear un Backup
- 
- ```bash
- ./manage_backup.sh backup
- ```
- 
- Esto creará un archivo `.tar.gz` en la carpeta `backups/` conteniendo:
- - `backend/app.db` (Base de datos)
- - `backend/token.json` (Sesión de Google Drive)
- - `backend/credentials.json` (Credenciales OAuth)
- 
- ### Restaurar un Backup
- 
- ```bash
- ./manage_backup.sh restore backups/backup_filesearch_YYYYMMDD_HHMMSS.tar.gz
- ```
- 
- **⚠️ Nota**: Al restaurar, se sobrescribirán los datos actuales en `backend/`. El script pedirá confirmación antes de proceder.
+## Backup & Restore
 
- ### Gestión desde la Interfaz Web (Nuevo)
+The project includes a `manage_backup.sh` script to facilitate backing up and restoring the database and local credentials.
 
- También puedes gestionar tus backups cómodamente desde la aplicación web:
-
- 1. Ve a la sección **Backups** en el menú lateral.
- 2. **Crear Backup**: Haz clic en el botón "Create Backup".
- 3. **Restaurar**: Haz clic en el icono de restaurar (reloj) junto a cualquier backup.
- 4. **Descargar**: Descarga los archivos `.tar.gz` a tu ordenador.
- 5. **Subir y Restaurar**: Sube un archivo de backup previo y restáuralo en un solo paso.
- 
- ## 🐛 Solución de Problemas
-
-### Backend no inicia
+### Create a Backup
 
 ```bash
-# Verificar que el entorno virtual está activado
+./manage_backup.sh backup
+```
+
+This will create a `.tar.gz` file in the `backups/` folder containing:
+- `backend/app.db` (Database)
+- `backend/token.json` (Google Drive session)
+- `backend/credentials.json` (OAuth credentials)
+
+### Restore a Backup
+
+```bash
+./manage_backup.sh restore backups/backup_filesearch_YYYYMMDD_HHMMSS.tar.gz
+```
+
+**Warning**: When restoring, current data in `backend/` will be overwritten. The script will ask for confirmation before proceeding.
+
+### Web Interface Management (New)
+
+You can also conveniently manage your backups from the web application:
+
+1. Go to the **Backups** section in the side menu.
+2. **Create Backup**: Click the "Create Backup" button.
+3. **Restore**: Click the restore icon (clock) next to any backup.
+4. **Download**: Download `.tar.gz` files to your computer.
+5. **Upload and Restore**: Upload a previous backup file and restore it in one step.
+
+## Troubleshooting
+
+### Backend won't start
+
+```bash
+# Verify that the virtual environment is activated
 source venv/bin/activate  # Linux/Mac
-# o
+# or
 venv\Scripts\activate  # Windows
 
-# Verificar instalación de dependencias
+# Verify dependency installation
 pip install -r requirements.txt
 ```
 
-### Frontend no inicia
+### Frontend won't start
 
 ```bash
-# Reinstalar dependencias
+# Reinstall dependencies
 rm -rf node_modules package-lock.json
 npm install
 ```
 
 ### Error "API key not configured"
 
-1. Configura la API key desde la UI (sección Configuration)
-2. O edita el archivo `backend/.env` y añade:
+1. Configure the API key from the UI (Configuration section)
+2. Or edit the `backend/.env` file and add:
    ```
-   GOOGLE_API_KEY=tu_api_key_aqui
+   GOOGLE_API_KEY=your_api_key_here
    ```
 
-### Error de CORS
+### CORS Error
 
-Verifica que:
-- El backend está en `http://localhost:8000`
-- El frontend está en `http://localhost:5173`
-- Los orígenes están configurados en `backend/.env`:
+Verify that:
+- The backend is at `http://localhost:8000`
+- The frontend is at `http://localhost:5173`
+- Origins are configured in `backend/.env`:
   ```
   CORS_ORIGINS=http://localhost:5173,http://localhost:3000
   ```
 
-### Documentos no se indexan
+### Documents not indexing
 
-- Verifica que el formato del archivo es compatible
-- Revisa los logs del backend para errores
-- Asegúrate de que la API key tiene los permisos necesarios
+- Verify that the file format is compatible
+- Check backend logs for errors
+- Ensure the API key has the necessary permissions
 
-## 📄 Licencia
+## License
 
-Este proyecto es un sistema de demostración. Ajusta la licencia según tus necesidades.
+This project is a demonstration system. Adjust the license according to your needs.
 
-## 👥 Contribuciones
+## Contributions
 
-Las contribuciones son bienvenidas. Por favor:
-1. Fork el proyecto
-2. Crea una rama para tu feature
-3. Commit tus cambios
-4. Push a la rama
-5. Abre un Pull Request
+Contributions are welcome. Please:
+1. Fork the project
+2. Create a branch for your feature
+3. Commit your changes
+4. Push to the branch
+5. Open a Pull Request
 
-## 📧 Contacto
+## Contact
 
-Para preguntas o sugerencias, abre un issue en el repositorio.
+For questions or suggestions, open an issue in the repository.
 
 ---
 
-**Desarrollado con ❤️ usando Google Gemini API, FastAPI, React y Material-UI**
+**Developed with love using Google Gemini API, FastAPI, React, and Material-UI**
